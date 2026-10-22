@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.claude/settings.local.json
+tmp/
+
+# Modelos descargados o exportados (se obtienen con model_manager)
+*.onnx
+models/
