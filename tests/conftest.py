@@ -4,6 +4,8 @@ import numpy as np
 import pytest
 from PIL import Image
 
+from image_studio.pipeline.remove_bg import RemovalResult
+
 
 @pytest.fixture
 def escribir_png():
@@ -15,3 +17,17 @@ def escribir_png():
         return ruta
 
     return _escribir
+
+
+class RemovedorFalso:
+    """Devuelve un alfa casi completo sin cargar modelos."""
+
+    def run(self, doc, ajustes, usar_alfa_existente=False):
+        alfa = np.ones(doc.rgb.shape[:2], np.float32)
+        alfa[0, 0] = 0.0
+        return RemovalResult(doc.rgb, alfa, None, False, "", {})
+
+
+@pytest.fixture
+def removedor_falso():
+    return RemovedorFalso()
