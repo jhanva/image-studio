@@ -3,7 +3,15 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QSize, QThreadPool
-from PySide6.QtWidgets import QHBoxLayout, QListWidget, QListWidgetItem, QMainWindow, QStackedWidget, QWidget
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QLabel,
+    QListWidget,
+    QListWidgetItem,
+    QMainWindow,
+    QStackedWidget,
+    QWidget,
+)
 
 from image_studio.tools.base import Tool
 
@@ -31,9 +39,14 @@ class MainWindow(QMainWindow):
         diseno.addWidget(self.pila)
         self.setCentralWidget(central)
         self.lista.setCurrentRow(0)
+        self.etiqueta_equipo = QLabel("")
+        self.statusBar().addPermanentWidget(self.etiqueta_equipo)
 
     def herramienta(self, id_: str) -> Tool:
         return next(h for h in self._herramientas if h.id == id_)
+
+    def mostrar_equipo(self, texto: str) -> None:
+        self.etiqueta_equipo.setText(texto)
 
     def actual(self) -> Tool:
         return self.pila.currentWidget()

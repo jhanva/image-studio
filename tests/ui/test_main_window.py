@@ -54,3 +54,9 @@ def test_cerrar_detiene_las_herramientas(qtbot):
     ventana, (_uno, dos) = _ventana(qtbot)
     ventana.close()
     assert dos.detenida
+
+
+def test_muestra_el_equipo_en_la_barra_de_estado(qtbot):
+    ventana, _ = _ventana(qtbot)
+    ventana.mostrar_equipo("RTX 3050 (8 GB), 16 GB de RAM")
+    assert ventana.etiqueta_equipo.text() == "RTX 3050 (8 GB), 16 GB de RAM"

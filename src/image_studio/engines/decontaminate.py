@@ -7,11 +7,21 @@ from concurrent.futures import ThreadPoolExecutor
 
 import numba
 import numpy as np
-from pymatting import estimate_foreground_ml
 
 # estimate_foreground_ml usa funciones paralelas de numba; llamarlas desde varios hilos con la
 # capa workqueue termina el proceso. "threadsafe" exige omp o tbb, o falla con un error claro.
 numba.config.THREADING_LAYER = "threadsafe"
+
+# Ver matting_classic: pymatting se importa en la primera llamada.
+estimate_foreground_ml = None
+
+
+def _cargar_pymatting() -> None:
+    global estimate_foreground_ml
+    if estimate_foreground_ml is None:
+        from pymatting import estimate_foreground_ml as funcion
+
+        estimate_foreground_ml = funcion
 
 
 def decontaminate(
@@ -21,6 +31,7 @@ def decontaminate(
     margen: int = 16,
     hilos: int | None = None,
 ) -> np.ndarray:
+    _cargar_pymatting()
     salida = rgb.copy()
     borde = (alpha > 0.01) & (alpha < 0.99)
     if not borde.any():
