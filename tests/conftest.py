@@ -1,3 +1,8 @@
+import os
+
+# Los tests de interfaz corren sin ventana visible; debe fijarse antes de crear la QApplication.
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
 from pathlib import Path
 
 import numpy as np
