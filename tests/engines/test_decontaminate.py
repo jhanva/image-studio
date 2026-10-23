@@ -25,3 +25,16 @@ def test_sin_borde_devuelve_copia():
     alfa = np.ones((16, 16), np.float32)
     limpio = decontaminate(rgb, alfa)
     assert np.array_equal(limpio, rgb) and limpio is not rgb
+
+
+def test_hilos_dan_el_mismo_resultado_que_secuencial():
+    rgb, alfa = _degradado(n=600)
+    secuencial = decontaminate(rgb, alfa, tile=128, hilos=1)
+    paralelo = decontaminate(rgb, alfa, tile=128, hilos=4)
+    assert np.array_equal(secuencial, paralelo)
+
+
+def test_numba_usa_una_capa_segura_para_hilos():
+    import numba
+
+    assert numba.config.THREADING_LAYER == "threadsafe"
