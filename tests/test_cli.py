@@ -41,3 +41,22 @@ def test_color_hex():
     assert color_hex("#00FF80") == (0, 255, 128)
     with pytest.raises(argparse.ArgumentTypeError):
         color_hex("verde")
+
+
+def test_resuelve_el_modelo_automatico(tmp_path, escribir_png, removedor_falso):
+    from image_studio.engines.hardware import Hardware
+
+    escribir_png(tmp_path / "entrada" / "a.png")
+    pedidos = []
+
+    def fabrica(modelo, dispositivo, progreso):
+        pedidos.append((modelo, dispositivo))
+        return removedor_falso
+
+    codigo = main(
+        ["batch", str(tmp_path / "entrada"), str(tmp_path / "salida")],
+        crear_removedor=fabrica,
+        hardware=Hardware(None, 0, 8192, 4),
+    )
+    assert codigo == 0
+    assert pedidos == [("birefnet_lite", "cpu")]

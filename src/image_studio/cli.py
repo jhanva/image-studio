@@ -10,7 +10,9 @@ from dataclasses import replace
 from pathlib import Path
 
 from image_studio.core.export import FORMATOS_SALIDA, ExportSettings, Fondo
+from image_studio.engines.hardware import Hardware, detect_hardware
 from image_studio.pipeline.batch import BatchItem, run_batch
+from image_studio.pipeline.device_choice import choose
 from image_studio.pipeline.factory import build_remover
 from image_studio.pipeline.settings import MODELOS_SEGMENTACION, PRESETS
 
@@ -39,7 +41,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: list[str] | None = None, crear_removedor=build_remover) -> int:
+def main(argv: list[str] | None = None, crear_removedor=build_remover, hardware: Hardware | None = None) -> int:
     args = build_parser().parse_args(argv)
     if not args.entrada.is_dir():
         print(f"La carpeta de entrada no existe: {args.entrada}", file=sys.stderr)
@@ -55,7 +57,11 @@ def main(argv: list[str] | None = None, crear_removedor=build_remover) -> int:
         margen_px=args.margen,
         dpi=args.dpi,
     )
-    removedor = crear_removedor(ajustes.modelo, "cpu" if args.cpu else "auto", _progreso_descarga)
+    eleccion = choose(ajustes.modelo, hardware or detect_hardware())
+    dispositivo = "cpu" if args.cpu else eleccion.dispositivo
+    ajustes = replace(ajustes, modelo=eleccion.modelo)
+    print(f"Usando {eleccion.descripcion}" + (" (forzado a CPU)" if args.cpu else ""))
+    removedor = crear_removedor(ajustes.modelo, dispositivo, _progreso_descarga)
     items = run_batch(args.entrada, args.salida, removedor, ajustes, exportar, progreso=_progreso_lote)
     conteo = Counter(item.estado for item in items)
     print(

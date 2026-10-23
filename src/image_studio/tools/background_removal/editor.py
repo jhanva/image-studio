@@ -251,7 +251,7 @@ class EditorTool(Tool):
 
     def _ejecutar_removedor(self, doc, ajustes):
         # Corre en un hilo de trabajo; la primera vez carga el modelo (BiRefNet tarda unos 11 s).
-        return self._cache.get(ajustes.modelo).run(doc, ajustes)
+        return self._cache.run(doc, ajustes)
 
     def _fondo_quitado(self, resultado) -> None:
         self._liberar()
@@ -259,7 +259,7 @@ class EditorTool(Tool):
         self._actualizar_estado()
         total = sum(resultado.tiempos.values())
         aviso = f" Revisar: {resultado.motivo_confianza}." if resultado.baja_confianza else ""
-        self.informar(f"Fondo quitado en {total:.1f} s.{aviso}")
+        self.informar(f"Fondo quitado en {total:.1f} s con {resultado.dispositivo}.{aviso}")
 
     def _tarea_fallida(self, mensaje: str) -> None:
         if self.sesion is not None and self.sesion.refinado_pendiente:
