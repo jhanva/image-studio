@@ -26,10 +26,6 @@ def test_gpu_pequena_va_a_cpu_salvo_isnet():
     assert "4096 MB" in choose("birefnet_lite", GTX_4GB).descripcion
 
 
-def test_gpu_marcada_como_fallida_va_a_cpu():
-    assert choose("birefnet", RTX_8GB, gpu_fallida={"birefnet"}).dispositivo == "cpu"
-
-
 def test_modelo_desconocido():
     with pytest.raises(ValueError):
         choose("u2net", RTX_8GB)

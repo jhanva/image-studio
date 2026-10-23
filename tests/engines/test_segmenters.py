@@ -51,3 +51,10 @@ def test_isnet_usa_media_0_5():
     rgb = np.full((32, 32, 3), 128, np.uint8)
     ISNetSegmenter(sesion).predict(rgb)
     assert np.abs(sesion.recibido).max() < 0.01
+
+
+def test_informa_el_proveedor_real():
+    sesion = SesionFalsa(np.zeros((1, 1, 1024, 1024), np.float32))
+    assert BiRefNetSegmenter(sesion).proveedor is None
+    sesion.get_providers = lambda: ["CPUExecutionProvider"]
+    assert BiRefNetSegmenter(sesion).proveedor == "CPUExecutionProvider"

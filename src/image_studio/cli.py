@@ -22,6 +22,7 @@ from image_studio.engines.warmup import prepare_engines
 from image_studio.pipeline.batch import BatchItem, run_batch
 from image_studio.pipeline.device_choice import choose
 from image_studio.pipeline.factory import build_remover
+from image_studio.pipeline.remover_cache import RemoverCache
 from image_studio.pipeline.settings import MODELOS_SEGMENTACION, PRESETS
 
 
@@ -72,11 +73,12 @@ def main(argv: list[str] | None = None, crear_removedor=build_remover, hardware:
         margen_px=args.margen,
         dpi=args.dpi,
     )
-    eleccion = choose(ajustes.modelo, hardware or detect_hardware())
-    dispositivo = "cpu" if args.cpu else eleccion.dispositivo
-    ajustes = replace(ajustes, modelo=eleccion.modelo)
-    print(f"Usando {eleccion.descripcion}" + (" (forzado a CPU)" if args.cpu else ""))
-    removedor = crear_removedor(ajustes.modelo, dispositivo, _progreso_descarga)
+    equipo = hardware or detect_hardware()
+    if args.cpu:
+        equipo = replace(equipo, gpu=None, vram_mb=0)
+    print(f"Usando {choose(ajustes.modelo, equipo).descripcion}" + (" (forzado a CPU)" if args.cpu else ""))
+    # El caché resuelve el modelo automático y sigue en CPU si la GPU no responde.
+    removedor = RemoverCache(lambda m, d, p: crear_removedor(m, d, _progreso_descarga), hardware=equipo)
     items = run_batch(args.entrada, args.salida, removedor, ajustes, exportar, progreso=_progreso_lote)
     conteo = Counter(item.estado for item in items)
     print(
@@ -108,12 +110,12 @@ def _diagnostico(equipo: Hardware, crear_removedor) -> int:
     if not (models_dir() / MODELOS[eleccion.modelo].archivo).exists():
         print(f"Modelo {eleccion.modelo} no descargado: se descargará al primer uso")
         return 0
-    removedor = crear_removedor(eleccion.modelo, eleccion.dispositivo, None)
+    cache = RemoverCache(crear_removedor, hardware=equipo)
     filas, columnas = np.mgrid[:600, :800]
     rgb = np.full((600, 800, 3), 235, np.uint8)
     rgb[np.hypot(filas - 300, columnas - 400) <= 180] = (200, 40, 30)
-    ajustes = replace(PRESETS["persona"], modelo=eleccion.modelo)
+    ajustes = replace(PRESETS["persona"], modelo="auto")
     inicio = perf_counter()
-    resultado = removedor.run(ImageDoc(Path("diagnostico.png"), rgb, None, None, None), ajustes)
-    print(f"Prueba de recorte: {perf_counter() - inicio:.1f} s, alfa medio {resultado.alpha.mean():.3f}")
+    resultado = cache.run(ImageDoc(Path("diagnostico.png"), rgb, None, None, None), ajustes)
+    print(f"Prueba de recorte: {perf_counter() - inicio:.1f} s con {resultado.dispositivo}, alfa medio {resultado.alpha.mean():.3f}")
     return 0

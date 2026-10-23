@@ -19,18 +19,16 @@ class Eleccion:
     descripcion: str
 
 
-def choose(modelo: str, equipo: Hardware, gpu_fallida: frozenset[str] | set[str] = frozenset()) -> Eleccion:
+def choose(modelo: str, equipo: Hardware) -> Eleccion:
     if modelo == "auto":
         modelo = "birefnet" if equipo.vram_mb >= VRAM_NECESARIA_MB["birefnet"] else "birefnet_lite"
     if modelo not in VRAM_NECESARIA_MB:
         raise ValueError(f"Modelo no soportado: {modelo}")
     necesaria = VRAM_NECESARIA_MB[modelo]
-    if equipo.tiene_nvidia and equipo.vram_mb >= necesaria and modelo not in gpu_fallida:
+    if equipo.tiene_nvidia and equipo.vram_mb >= necesaria:
         return Eleccion(modelo, "auto", f"{modelo} en GPU ({equipo.gpu})")
     if not equipo.tiene_nvidia:
         motivo = "sin GPU NVIDIA"
-    elif modelo in gpu_fallida:
-        motivo = "la GPU falló antes"
     else:
         motivo = f"la GPU tiene {equipo.vram_mb} MB y el modelo necesita {necesaria} MB"
     return Eleccion(modelo, "cpu", f"{modelo} en CPU ({motivo})")

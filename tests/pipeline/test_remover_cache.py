@@ -1,6 +1,7 @@
 import threading
 import time
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 
@@ -76,12 +77,30 @@ def test_si_la_gpu_falla_repite_en_cpu_y_lo_recuerda():
 
     cache = RemoverCache(crear, hardware=RTX_8GB)
     resultado = cache.run(_doc(), PipelineSettings())
-    assert creados == [("birefnet", "auto"), ("birefnet", "cpu")]
-    assert "la GPU falló" in resultado.dispositivo
+    assert creados == [("birefnet", "auto"), ("birefnet_lite", "cpu")]
+    assert "la GPU no respondió" in resultado.dispositivo
     cache.run(_doc(), PipelineSettings())
-    assert creados == [("birefnet", "auto"), ("birefnet", "cpu")]
+    assert creados == [("birefnet", "auto"), ("birefnet_lite", "cpu")]
 
 
 def test_detecta_el_equipo_una_sola_vez():
     cache = RemoverCache(lambda m, d, p: Removedor(m, d))
     assert cache.hardware is cache.hardware
+
+
+class RemovedorEnCpu(Removedor):
+    """ONNX Runtime pidió CUDA pero la sesión quedó en CPU sin lanzar error."""
+
+    segmentador = SimpleNamespace(proveedor="CPUExecutionProvider")
+
+
+def test_detecta_la_caida_silenciosa_a_cpu():
+    creados = []
+
+    def crear(modelo, dispositivo, progreso):
+        creados.append((modelo, dispositivo))
+        return RemovedorEnCpu(modelo, dispositivo) if dispositivo == "auto" else Removedor(modelo, dispositivo)
+
+    resultado = RemoverCache(crear, hardware=RTX_8GB).run(_doc(), PipelineSettings())
+    assert creados == [("birefnet", "auto"), ("birefnet_lite", "cpu")]
+    assert "birefnet_lite en CPU (la GPU no respondió)" == resultado.dispositivo
