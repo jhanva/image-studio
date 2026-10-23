@@ -29,3 +29,9 @@ La primera ejecución descarga el modelo a `%LOCALAPPDATA%\ImageStudio\models`. 
 Atajos: Ctrl+O abrir, Ctrl+V pegar, Ctrl+R quitar fondo, V mover, K conservar, E borrar,
 R refinar borde, Ctrl+Z deshacer, Ctrl+Y rehacer, B ver original, Ctrl+0 ajustar, Ctrl+1 100%,
 Ctrl+S guardar PNG. Rueda: zoom. Botón central: desplazar.
+
+## Uso (Hito 3: suite)
+
+La barra lateral cambia entre **Quitar fondo** (editor) y **Lotes**. En Lotes se eligen las
+carpetas, el preset y la exportación; doble clic en una fila abre esa imagen en el editor para
+retocarla. Los presets propios se guardan en `%APPDATA%\ImageStudio\presets.json`.
