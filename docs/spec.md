@@ -49,9 +49,9 @@ completa: lo que se ve en el lienzo es lo que se exporta.
 
 | Pieza | Elección |
 |---|---|
-| Lenguaje | Python 3.12 |
+| Lenguaje | Python 3.14 |
 | UI | PySide6 + tema oscuro (PyQtDarkTheme o QSS propio) |
-| Inferencia | ONNX Runtime: `onnxruntime-gpu` (CUDA) con respaldo a CPU |
+| Inferencia | ONNX Runtime: `onnxruntime-gpu[cuda,cudnn]` (CUDA) con respaldo a CPU; sesiones con `enable_mem_pattern = False` (con el patrón de memoria BiRefNet desborda 8 GB de VRAM y pasa de 1.5 s a 22 s) |
 | Imagen | numpy, opencv-python-headless, Pillow, pillow-heif |
 | Limpieza de color y matting clásico | pymatting |
 | Pruebas | pytest, pytest-qt |
@@ -65,7 +65,7 @@ PyTorch no se incluye en la app: ONNX Runtime pesa cientos de MB frente a varios
 |---|---|---|---|
 | Segmentación calidad (por defecto) | BiRefNet (general), ONNX, entrada 1024x1024 | MIT | Todas las imágenes |
 | Segmentación rápida | ISNet general-use, ONNX | Apache-2.0 | Previews y lotes grandes cuando se elija el modo rápido |
-| Matting de borde | ViTMatte (small), exportado a ONNX | Ver riesgo R1 | Pelo, pelaje, semitransparencias |
+| Matting de borde | ViTMatte (small), exportado a ONNX | Ver riesgo R1 | Pelo, pelaje, semitransparencias. Se integra cuando se resuelva R1; mientras tanto se usa el matting clásico |
 | Matting de respaldo | Matting clásico de pymatting (closed-form / learning-based) | MIT | Si ViTMatte no se adopta o falla |
 
 Los modelos no se versionan en el repo. `model_manager` los descarga a
@@ -93,8 +93,10 @@ image-studio/
       mask_ops.py         # suavizado, desplazamiento, umbral, recorte al contenido
       history.py          # deshacer/rehacer por tiles
       export.py           # composición con fondo y escritura del archivo
+      metrics.py          # IoU, SAD y MSE para el golden set
     engines/              # IA, sin Qt
       base.py             # interfaces Segmenter y Matter
+      onnx_segmenter.py   # base común: preproceso, inferencia y escalado
       segment_birefnet.py
       segment_isnet.py
       matting_vitmatte.py
@@ -102,6 +104,8 @@ image-studio/
       decontaminate.py    # estimación del color del frente en bordes
       model_manager.py    # descarga, hash, caché, selección de proveedor CUDA > CPU
     pipeline/             # sin Qt
+      settings.py         # PipelineSettings y presets
+      factory.py          # construye el removedor desde los modelos
       remove_bg.py        # segmentar -> trimap -> matting -> limpieza de color
       batch.py            # lote sin interfaz + informe
     tools/
@@ -181,6 +185,7 @@ sujeto que ocupa menos del 2% o más del 98% de la imagen.
 - La app se lanza con `python -m image_studio`. No hay instalador en el MVP.
 - Ramas, commits, PR y versiones siguen [repo-workflow.md](repo-workflow.md) (Gitflow con
   `main` y `develop`, Conventional Commits en español, versión SemVer en `pyproject.toml`).
+- Entregas por hitos: Hito 1 motor y CLI; Hito 2 editor; Hito 3 suite (lotes en UI, presets propios, exportación en UI). Planes en `docs/plans/`.
 
 ## 4. Decisiones explícitas
 

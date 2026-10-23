@@ -1,0 +1,7 @@
+# Dependencias de la app. Instalar con el Python de .venv.
+numpy==2.5.4
+opencv-python-headless==5.0.0.93
+pillow==13.0.0
+pillow-heif==1.8.1
+PyMatting==1.1.16
+onnxruntime-gpu[cuda,cudnn]==1.31.0
