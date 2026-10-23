@@ -36,3 +36,9 @@ class RemovedorFalso:
 @pytest.fixture
 def removedor_falso():
     return RemovedorFalso()
+
+
+@pytest.fixture(autouse=True)
+def config_temporal(tmp_path, monkeypatch):
+    """Ningún test escribe en el %APPDATA% real."""
+    monkeypatch.setenv("IMAGE_STUDIO_CONFIG_DIR", str(tmp_path / "config"))

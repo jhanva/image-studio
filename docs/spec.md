@@ -65,7 +65,7 @@ PyTorch no se incluye en la app: ONNX Runtime pesa cientos de MB frente a varios
 |---|---|---|---|
 | Segmentación calidad (por defecto) | BiRefNet (general), ONNX, entrada 1024x1024 | MIT | Todas las imágenes |
 | Segmentación rápida | ISNet general-use, ONNX | Apache-2.0 | Previews y lotes grandes cuando se elija el modo rápido |
-| Matting de borde | ViTMatte (small), exportado a ONNX | Ver riesgo R1 | Pelo, pelaje, semitransparencias. Se integra cuando se resuelva R1; mientras tanto se usa el matting clásico |
+| Matting de borde | ViTMatte (small), exportado a ONNX | Ver riesgo R1 | No adoptado (ver R1): los pesos públicos se entrenaron con Composition-1k, de uso no comercial |
 | Matting de respaldo | Matting clásico de pymatting (closed-form / learning-based) | MIT | Si ViTMatte no se adopta o falla |
 
 Los modelos no se versionan en el repo. `model_manager` los descarga a
@@ -109,18 +109,21 @@ image-studio/
       factory.py          # construye el removedor desde los modelos
       session.py          # sesión de edición: máscara, historial, pinceles, exportar
       refine_region.py    # matting solo sobre la zona pintada con Refinar borde
+      presets_store.py    # presets propios en %APPDATA%\ImageStudio\presets.json
+      remover_cache.py    # un removedor por modelo, compartido por las herramientas
       remove_bg.py        # segmentar -> trimap -> matting -> limpieza de color
       batch.py            # lote sin interfaz + informe
     tools/
-      base.py             # interfaz Tool: id, nombre, icono, panel, acciones
-      background_removal/ # herramienta 1: panel de ajustes, presets, pinceles
+      base.py             # Tool: QWidget con id, nombre, icono y mensajes de estado
+      background_removal/ # herramienta 1: editor (Hito 2) con presets y exportación
+      batch/              # herramienta 2: lotes con progreso, cancelación y tabla
     ui/                   # PySide6
       app.py              # arranque y tema
-      main_window.py      # acciones, barra de herramientas y estado
+      main_window.py      # ventana de la suite: barra lateral de herramientas y estado
       qt_image.py         # buffers numpy que respaldan QImage sin copia
       canvas/             # QGraphicsView: capa de imagen, tablero, zoom, trazos
-      batch_panel.py      # Hito 3
-      export_dialog.py    # Hito 3
+      export_dialog.py    # formato, fondo, color, recorte, margen y DPI
+      preset_dialog.py    # crear presets propios
     workers/              # QThreadPool: tareas en segundo plano con señales
     cli.py                # `python -m image_studio batch ...`
   scripts/
@@ -219,7 +222,7 @@ sujeto que ocupa menos del 2% o más del 98% de la imagen.
 
 | Id | Riesgo | Mitigación |
 |---|---|---|
-| R1 | Los pesos de ViTMatte se entrenan con Composition-1k, cuya licencia restringe uso comercial; los resultados se usan en productos que se venden | Revisar la licencia antes de adoptarlo. Si no es apto, usar el matting clásico de pymatting (MIT) y evaluar alternativas con el golden set |
+| R1 | Los pesos de ViTMatte se entrenan con Composition-1k, cuya licencia restringe uso comercial; los resultados se usan en productos que se venden | Resuelto en el Hito 3: ViTMatte no se adopta y el matting es el clásico de pymatting (MIT). Se reevalúa si aparecen pesos con datos de licencia comercial |
 | R2 | La exportación de BiRefNet o ViTMatte a ONNX falla o pierde precisión | `scripts/export_models.py` compara salida PyTorch vs ONNX (error absoluto medio < 0.01) antes de publicar el modelo |
 | R3 | `onnxruntime-gpu` requiere DLLs de CUDA/cuDNN compatibles | Instalar las dependencias CUDA vía pip en `.venv`; respaldo automático a CPU |
 | R4 | La VRAM de la RTX 3050 no alcanza para matting a resolución completa | Matting por recortes alrededor del sujeto y por tiles |

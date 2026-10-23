@@ -1,323 +1,55 @@
-"""Ventana principal del editor."""
+"""Ventana de la suite: barra lateral de herramientas, panel activo y barra de estado."""
 
 from __future__ import annotations
 
-from pathlib import Path
+from PySide6.QtCore import QSize, QThreadPool
+from PySide6.QtWidgets import QHBoxLayout, QListWidget, QListWidgetItem, QMainWindow, QStackedWidget, QWidget
 
-from PySide6.QtCore import QPointF, QThreadPool
-from PySide6.QtGui import QAction, QActionGroup, QImage, QKeySequence
-from PySide6.QtWidgets import (
-    QApplication,
-    QComboBox,
-    QFileDialog,
-    QLabel,
-    QMainWindow,
-    QSpinBox,
-    QToolBar,
-)
-
-from image_studio.core.brush import Modo, Rect
-from image_studio.core.export import ExportSettings
-from image_studio.core.image_io import FORMATOS_ENTRADA, ImageDoc, ImageLoadError, load_image
-from image_studio.engines.matting_classic import ClassicMatter
-from image_studio.pipeline.factory import build_remover
-from image_studio.pipeline.session import EditSession, Pincel
-from image_studio.pipeline.settings import PRESETS
-from image_studio.ui.canvas.view import CanvasView
-from image_studio.ui.qt_image import RgbaBuffer, RgbBuffer, qimage_to_arrays
-from image_studio.workers.tasks import ejecutar
-
-FILTRO_IMAGENES = "Imágenes (" + " ".join(f"*{e}" for e in sorted(FORMATOS_ENTRADA)) + ")"
+from image_studio.tools.base import Tool
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, crear_removedor=build_remover, matter=None):
+    def __init__(self, herramientas: list[Tool]):
         super().__init__()
         self.setWindowTitle("Image Studio")
         self.resize(1400, 900)
-        self.setAcceptDrops(True)
-        self._crear_removedor = crear_removedor
-        self._removedores: dict[str, object] = {}
-        self._matter = matter if matter is not None else ClassicMatter()
-        self.sesion: EditSession | None = None
-        self._despues: RgbaBuffer | None = None
-        self._antes: RgbBuffer | None = None
-        self.ocupado = False
-        self.lienzo = CanvasView(self)
-        self.setCentralWidget(self.lienzo)
-        self.lienzo.trazo_inicio.connect(self._trazo_inicio)
-        self.lienzo.trazo_mueve.connect(self._trazo_mueve)
-        self.lienzo.trazo_fin.connect(self._trazo_fin)
-        self._crear_interfaz()
-        self._actualizar_estado()
-        self.statusBar().showMessage("Abre una imagen (Ctrl+O), arrástrala aquí o pégala (Ctrl+V)")
+        self._herramientas = list(herramientas)
+        self.lista = QListWidget()
+        self.lista.setFixedWidth(140)
+        self.lista.setIconSize(QSize(24, 24))
+        self.pila = QStackedWidget()
+        for herramienta in self._herramientas:
+            self.lista.addItem(QListWidgetItem(herramienta.icono(), herramienta.nombre))
+            self.pila.addWidget(herramienta)
+            herramienta.mensaje.connect(self.statusBar().showMessage)
+        self.lista.currentRowChanged.connect(self._cambiar)
+        central = QWidget()
+        diseno = QHBoxLayout(central)
+        diseno.setContentsMargins(0, 0, 0, 0)
+        diseno.setSpacing(0)
+        diseno.addWidget(self.lista)
+        diseno.addWidget(self.pila)
+        self.setCentralWidget(central)
+        self.lista.setCurrentRow(0)
 
-    # Interfaz
+    def herramienta(self, id_: str) -> Tool:
+        return next(h for h in self._herramientas if h.id == id_)
 
-    def _accion(self, texto: str, atajos: list[str], funcion, marcable: bool = False) -> QAction:
-        accion = QAction(texto, self)
-        accion.setShortcuts([QKeySequence(a) for a in atajos])
-        accion.setCheckable(marcable)
-        accion.triggered.connect(funcion)
-        self.addAction(accion)
-        return accion
+    def actual(self) -> Tool:
+        return self.pila.currentWidget()
 
-    def _crear_interfaz(self) -> None:
-        self.accion_abrir = self._accion("Abrir...", ["Ctrl+O"], lambda *_: self._abrir_dialogo())
-        self.accion_pegar = self._accion("Pegar", ["Ctrl+V"], lambda *_: self.pegar())
-        self.accion_guardar = self._accion("Guardar PNG...", ["Ctrl+S"], lambda *_: self._guardar_dialogo())
-        self.accion_quitar = self._accion("Quitar fondo", ["Ctrl+R"], lambda *_: self.quitar_fondo())
-        self.accion_deshacer = self._accion("Deshacer", ["Ctrl+Z"], lambda *_: self.deshacer())
-        self.accion_rehacer = self._accion("Rehacer", ["Ctrl+Y", "Ctrl+Shift+Z"], lambda *_: self.rehacer())
-        self.accion_antes = self._accion(
-            "Ver original", ["B"], lambda marcado: self.lienzo.capa.set_show_before(marcado), marcable=True
-        )
-        self.accion_ajustar = self._accion("Ajustar", ["Ctrl+0"], lambda *_: self.lienzo.ajustar())
-        self.accion_100 = self._accion("100%", ["Ctrl+1"], lambda *_: self.lienzo.zoom_real())
+    def mostrar(self, id_: str) -> Tool:
+        herramienta = self.herramienta(id_)
+        self.lista.setCurrentRow(self._herramientas.index(herramienta))
+        return herramienta
 
-        grupo = QActionGroup(self)
-        self._herramientas: list[tuple[QAction, Modo | None]] = []
-        for texto, atajo, modo in (
-            ("Mover", "V", None),
-            ("Conservar", "K", Modo.CONSERVAR),
-            ("Borrar", "E", Modo.BORRAR),
-            ("Refinar borde", "R", Modo.REFINAR),
-        ):
-            accion = self._accion(texto, [atajo], lambda *_: self._actualizar_estado(), marcable=True)
-            grupo.addAction(accion)
-            self._herramientas.append((accion, modo))
-        self.accion_mover, self.accion_conservar, self.accion_borrar, self.accion_refinar = (
-            a for a, _ in self._herramientas
-        )
-        self.accion_mover.setChecked(True)
-
-        self.combo_preset = QComboBox()
-        self.combo_preset.addItems(sorted(PRESETS))
-        self.combo_preset.setCurrentText("producto")
-        self.spin_radio = QSpinBox()
-        self.spin_radio.setRange(1, 500)
-        self.spin_radio.setValue(30)
-        self.spin_radio.valueChanged.connect(lambda valor: self.lienzo.set_brush_radius(float(valor)))
-        self.spin_dureza = QSpinBox()
-        self.spin_dureza.setRange(0, 100)
-        self.spin_dureza.setValue(80)
-        self.spin_dureza.setSuffix(" %")
-
-        barra = QToolBar("Herramientas")
-        barra.setMovable(False)
-        self.addToolBar(barra)
-        for accion in (self.accion_abrir, self.accion_pegar, self.accion_guardar):
-            barra.addAction(accion)
-        barra.addSeparator()
-        barra.addWidget(QLabel(" Preset "))
-        barra.addWidget(self.combo_preset)
-        barra.addAction(self.accion_quitar)
-        barra.addSeparator()
-        for accion, _ in self._herramientas:
-            barra.addAction(accion)
-        barra.addWidget(QLabel(" Radio "))
-        barra.addWidget(self.spin_radio)
-        barra.addWidget(QLabel(" Dureza "))
-        barra.addWidget(self.spin_dureza)
-        barra.addSeparator()
-        for accion in (self.accion_deshacer, self.accion_rehacer, self.accion_antes, self.accion_ajustar, self.accion_100):
-            barra.addAction(accion)
-
-    def _modo_actual(self) -> Modo | None:
-        return next((modo for accion, modo in self._herramientas if accion.isChecked()), None)
-
-    def _actualizar_estado(self) -> None:
-        hay = self.sesion is not None
-        libre = not self.ocupado
-        editable = hay and libre
-        for accion in (self.accion_abrir, self.accion_pegar):
-            accion.setEnabled(libre)
-        for accion in (self.accion_guardar, self.accion_quitar, self.accion_antes, self.accion_ajustar, self.accion_100):
-            accion.setEnabled(editable)
-        for accion, _ in self._herramientas:
-            accion.setEnabled(editable)
-        sin_trazo = editable and not self.sesion.trazo_abierto
-        self.accion_deshacer.setEnabled(sin_trazo and self.sesion.history.puede_deshacer)
-        self.accion_rehacer.setEnabled(sin_trazo and self.sesion.history.puede_rehacer)
-        self.lienzo.pintura_habilitada = editable and self._modo_actual() is not None
-        self.lienzo.set_brush_radius(float(self.spin_radio.value()))
-
-    def _ocupar(self, mensaje: str) -> None:
-        self.ocupado = True
-        self.statusBar().showMessage(mensaje)
-        self._actualizar_estado()
-
-    def _liberar(self) -> None:
-        self.ocupado = False
-        self._actualizar_estado()
-
-    def _refrescar(self, rect: Rect | None) -> None:
-        if rect is None or self._despues is None:
-            return
-        self._despues.update(self.sesion.rgb, self.sesion.alpha, rect)
-        self.lienzo.actualizar(rect)
-
-    # Abrir
-
-    def abrir(self, ruta: str | Path) -> bool:
-        try:
-            doc = load_image(ruta)
-        except ImageLoadError as exc:
-            self.statusBar().showMessage(str(exc))
-            return False
-        return self.cargar_doc(doc)
-
-    def cargar_doc(self, doc: ImageDoc) -> bool:
-        if self.ocupado:
-            self.statusBar().showMessage("Espera a que termine la tarea en curso")
-            return False
-        self.sesion = EditSession(doc)
-        self._despues = RgbaBuffer(self.sesion.rgb, self.sesion.alpha)
-        self._antes = RgbBuffer(doc.rgb)
-        self.lienzo.set_images(self._despues.imagen, self._antes.imagen)
-        self.accion_antes.setChecked(False)
-        self.lienzo.capa.set_show_before(False)
-        self.setWindowTitle(f"{doc.path.name} - Image Studio")
-        ancho, alto = doc.size
-        self.statusBar().showMessage(f"{doc.path.name}: {ancho}x{alto}")
-        self._actualizar_estado()
-        return True
-
-    def cargar_qimage(self, imagen: QImage, nombre: str = "portapapeles.png") -> bool:
-        rgb, alfa = qimage_to_arrays(imagen)
-        return self.cargar_doc(ImageDoc(Path(nombre), rgb, alfa, None, None))
-
-    def pegar(self) -> None:
-        imagen = QApplication.clipboard().image()
-        if imagen.isNull():
-            self.statusBar().showMessage("El portapapeles no tiene una imagen")
-            return
-        self.cargar_qimage(imagen)
-
-    def _abrir_dialogo(self) -> None:
-        ruta, _ = QFileDialog.getOpenFileName(self, "Abrir imagen", "", FILTRO_IMAGENES)
-        if ruta:
-            self.abrir(Path(ruta))
-
-    def dragEnterEvent(self, evento) -> None:
-        if evento.mimeData().hasUrls():
-            evento.acceptProposedAction()
-
-    def dropEvent(self, evento) -> None:
-        rutas = [Path(url.toLocalFile()) for url in evento.mimeData().urls() if url.isLocalFile()]
-        if rutas:
-            self.abrir(rutas[0])
-
-    # Quitar fondo
-
-    def quitar_fondo(self) -> None:
-        if self.sesion is None or self.ocupado:
-            return
-        nombre = self.combo_preset.currentText()
-        self._ocupar(f"Quitando fondo ({nombre})...")
-        ejecutar(
-            self._ejecutar_removedor,
-            self.sesion.doc,
-            PRESETS[nombre],
-            al_terminar=self._fondo_quitado,
-            al_fallar=self._tarea_fallida,
-        )
-
-    def _ejecutar_removedor(self, doc, ajustes):
-        # Corre en un hilo de trabajo; la primera vez carga el modelo (BiRefNet tarda unos 11 s).
-        removedor = self._removedores.get(ajustes.modelo)
-        if removedor is None:
-            removedor = self._crear_removedor(ajustes.modelo, "auto", None)
-            self._removedores[ajustes.modelo] = removedor
-        return removedor.run(doc, ajustes)
-
-    def _fondo_quitado(self, resultado) -> None:
-        self._liberar()
-        self._refrescar(self.sesion.apply_result(resultado))
-        self._actualizar_estado()
-        total = sum(resultado.tiempos.values())
-        aviso = f" Revisar: {resultado.motivo_confianza}." if resultado.baja_confianza else ""
-        self.statusBar().showMessage(f"Fondo quitado en {total:.1f} s.{aviso}")
-
-    def _tarea_fallida(self, mensaje: str) -> None:
-        if self.sesion is not None and self.sesion.refinado_pendiente:
-            self.sesion.cancel_refine()
-            self.lienzo.limpiar_vista_refinar()
-        self._liberar()
-        self.statusBar().showMessage(f"Error: {mensaje}")
-
-    # Pinceles
-
-    def _trazo_inicio(self, punto: QPointF) -> None:
-        modo = self._modo_actual()
-        if self.sesion is None or self.ocupado or modo is None:
-            return
-        self.sesion.pincel = Pincel(modo, float(self.spin_radio.value()), self.spin_dureza.value() / 100)
-        if modo is Modo.REFINAR:
-            self.lienzo.iniciar_vista_refinar(self.sesion.pincel.radio, punto)
-        self._refrescar(self.sesion.begin_stroke(punto.x(), punto.y()))
-
-    def _trazo_mueve(self, punto: QPointF) -> None:
-        if self.sesion is None or self.ocupado or not self.sesion.trazo_abierto:
-            return
-        if self.sesion.pincel.modo is Modo.REFINAR:
-            self.lienzo.agregar_punto_refinar(punto)
-        self._refrescar(self.sesion.move_stroke(punto.x(), punto.y()))
-
-    def _trazo_fin(self) -> None:
-        if self.sesion is None or self.ocupado:
-            return
-        self.sesion.end_stroke()
-        if self.sesion.refinado_pendiente:
-            self._ocupar("Refinando borde...")
-            ejecutar(
-                self.sesion.refine_pending,
-                self._matter,
-                al_terminar=self._borde_refinado,
-                al_fallar=self._tarea_fallida,
-            )
-            return
-        self._actualizar_estado()
-
-    def _borde_refinado(self, rect: Rect | None) -> None:
-        self.lienzo.limpiar_vista_refinar()
-        self._liberar()
-        self._refrescar(rect)
-        self.statusBar().showMessage("Borde refinado")
-
-    # Historial y guardado
-
-    def deshacer(self) -> None:
-        if self.sesion is None or self.ocupado or self.sesion.trazo_abierto:
-            return
-        for rect in self.sesion.undo():
-            self._refrescar(rect)
-        self._actualizar_estado()
-
-    def rehacer(self) -> None:
-        if self.sesion is None or self.ocupado or self.sesion.trazo_abierto:
-            return
-        for rect in self.sesion.redo():
-            self._refrescar(rect)
-        self._actualizar_estado()
-
-    def _guardar_dialogo(self) -> None:
-        if self.sesion is None:
-            return
-        sugerido = str(self.sesion.doc.path.with_suffix(".png"))
-        ruta, _ = QFileDialog.getSaveFileName(self, "Guardar PNG", sugerido, "PNG (*.png)")
-        if ruta:
-            self.guardar_en(Path(ruta))
-
-    def guardar_en(self, ruta: Path) -> Path | None:
-        if self.sesion is None or self.ocupado:
-            return None
-        limpiar = self.sesion.resultado is not None and PRESETS[self.combo_preset.currentText()].limpieza_color
-        destino = self.sesion.export(ruta, ExportSettings(), limpiar_color=limpiar)
-        self.statusBar().showMessage(f"Guardado: {destino}")
-        return destino
+    def _cambiar(self, fila: int) -> None:
+        self.pila.setCurrentIndex(fila)
+        self.statusBar().showMessage(self.actual().ultimo_mensaje)
 
     def closeEvent(self, evento) -> None:
+        for herramienta in self._herramientas:
+            herramienta.detener()
         # Un hilo de trabajo vivo al cerrar Python puede terminar el proceso con error.
         QThreadPool.globalInstance().waitForDone()
         super().closeEvent(evento)
