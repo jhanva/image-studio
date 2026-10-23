@@ -31,6 +31,11 @@ Name: "escritorio"; Description: "Crear un acceso directo en el escritorio"; Fla
 [Files]
 Source: "..\dist\ImageStudio\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+[InstallDelete]
+; Al actualizar, Inno Setup no borra archivos de la versión anterior: quedarían, por ejemplo, los
+; metadatos image_studio-<versión vieja>.dist-info y Python leería la versión equivocada.
+Type: filesandordirs; Name: "{app}\_internal"
+
 [UninstallDelete]
 ; La caché de numba (__pycache__) la crea "preparar" después de instalar; sin esto queda la carpeta.
 Type: filesandordirs; Name: "{app}\_internal\pymatting"
