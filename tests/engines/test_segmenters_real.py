@@ -5,11 +5,11 @@ import pytest
 
 from image_studio.core.metrics import iou
 from image_studio.engines.model_manager import MODELOS, create_session, models_dir
-from image_studio.engines.segment_birefnet import BiRefNetSegmenter
+from image_studio.engines.segment_birefnet import BiRefNetLiteSegmenter, BiRefNetSegmenter
 from image_studio.engines.segment_isnet import ISNetSegmenter
 
 pytestmark = pytest.mark.model
-CLASES = {"birefnet": BiRefNetSegmenter, "isnet": ISNetSegmenter}
+CLASES = {"birefnet": BiRefNetSegmenter, "birefnet_lite": BiRefNetLiteSegmenter, "isnet": ISNetSegmenter}
 
 
 @pytest.fixture(scope="module", params=sorted(CLASES))

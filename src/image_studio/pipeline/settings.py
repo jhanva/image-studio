@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, fields
 
-MODELOS_SEGMENTACION = ("birefnet", "isnet")
+MODELOS_SEGMENTACION = ("birefnet", "birefnet_lite", "isnet")
 
 
 @dataclass(frozen=True)
