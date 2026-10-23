@@ -24,3 +24,22 @@ def test_reporta_el_error(qtbot):
     ejecutar(fallar, al_terminar=errores.append, al_fallar=errores.append)
     qtbot.waitUntil(lambda: bool(errores))
     assert errores == ["ValueError: malo"]
+
+
+def test_reporta_avance_antes_del_resultado(qtbot):
+    eventos = []
+
+    def contar(hasta, reportar):
+        for i in range(1, hasta + 1):
+            reportar(i)
+        return "listo"
+
+    ejecutar(
+        contar,
+        3,
+        al_terminar=eventos.append,
+        al_fallar=eventos.append,
+        al_avanzar=eventos.append,
+    )
+    qtbot.waitUntil(lambda: "listo" in eventos)
+    assert eventos == [1, 2, 3, "listo"]
