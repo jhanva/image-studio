@@ -18,8 +18,9 @@ a = Analysis(
     datas=copy_metadata("pymatting") + copy_metadata("image-studio"),
     hiddenimports=["image_studio.ui.app"],
     excludes=["tkinter", "matplotlib", "IPython", "pytest", "PyInstaller"],
-    # numba guarda su caché junto a la fuente; pymatting necesita los .py en disco.
-    module_collection_mode={"pymatting": "pyz+py"},
+    # pymatting se carga desde sus .py en disco: dentro del PYZ la ruta del código es relativa, numba la
+    # completa con el directorio de trabajo y cada carpeta desde la que se abre la app recompila (40 s).
+    module_collection_mode={"pymatting": "py"},
 )
 # El proveedor TensorRT depende de DLL que no se distribuyen.
 a.binaries = [b for b in a.binaries if "tensorrt" not in b[0].lower()]

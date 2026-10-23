@@ -31,6 +31,10 @@ Name: "escritorio"; Description: "Crear un acceso directo en el escritorio"; Fla
 [Files]
 Source: "..\dist\ImageStudio\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+[UninstallDelete]
+; La caché de numba (__pycache__) la crea "preparar" después de instalar; sin esto queda la carpeta.
+Type: filesandordirs; Name: "{app}\_internal\pymatting"
+
 [Icons]
 Name: "{group}\Image Studio"; Filename: "{app}\ImageStudio.exe"
 Name: "{autodesktop}\Image Studio"; Filename: "{app}\ImageStudio.exe"; Tasks: escritorio
