@@ -82,6 +82,7 @@ def test_quitar_fondo_en_segundo_plano(abierto, qtbot):
     qtbot.waitUntil(lambda: not abierto.ocupado)
     assert abierto.sesion.alpha[50, 50] == 1.0 and abierto.sesion.alpha[0, 0] == 0.0
     assert "Fondo quitado" in abierto.ultimo_mensaje
+    assert " en GPU " in abierto.ultimo_mensaje or " en CPU " in abierto.ultimo_mensaje
 
 
 def test_usa_presets_propios(editor, escribir_png, tmp_path, removedor, qtbot):
@@ -91,7 +92,9 @@ def test_usa_presets_propios(editor, escribir_png, tmp_path, removedor, qtbot):
     editor.abrir(escribir_png(tmp_path / "taza.png", ancho=100, alto=100))
     editor.quitar_fondo()
     qtbot.waitUntil(lambda: not editor.ocupado)
-    assert removedor.ajustes[-1] == PipelineSettings(matting=False, banda_px=4)
+    usados = removedor.ajustes[-1]
+    assert (usados.matting, usados.banda_px) == (False, 4)
+    assert usados.modelo in ("birefnet", "birefnet_lite")
 
 
 def test_sin_herramienta_no_pinta(abierto):

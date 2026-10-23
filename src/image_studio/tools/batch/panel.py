@@ -158,7 +158,7 @@ class BatchTool(Tool):
 
     def _correr(self, entrada, salida, ajustes, exportar, cancelar, reportar):
         # Corre en un hilo de trabajo; el modelo se carga una vez y lo comparte el editor.
-        removedor = self._cache.get(ajustes.modelo)
+        removedor = self._cache  # elige modelo y dispositivo y repite en CPU si la GPU falla
         return run_batch(
             entrada,
             salida,

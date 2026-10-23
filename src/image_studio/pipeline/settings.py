@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, fields
 
-MODELOS_SEGMENTACION = ("birefnet", "isnet")
+MODELOS_SEGMENTACION = ("auto", "birefnet", "birefnet_lite", "isnet")
 
 
 @dataclass(frozen=True)
 class PipelineSettings:
-    modelo: str = "birefnet"
+    modelo: str = "auto"
     matting: bool = True
     limpieza_color: bool = True
     banda_px: int = 10
