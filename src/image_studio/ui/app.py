@@ -8,6 +8,10 @@ from pathlib import Path
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import QApplication
 
+from image_studio.pipeline.presets_store import PresetStore
+from image_studio.pipeline.remover_cache import RemoverCache
+from image_studio.tools.background_removal.editor import EditorTool
+from image_studio.tools.base import Tool
 from image_studio.ui.main_window import MainWindow
 
 FONDO_VENTANA = QColor(53, 53, 57)
@@ -41,10 +45,17 @@ def aplicar_tema(app: QApplication) -> None:
     app.setPalette(paleta)
 
 
+def crear_herramientas(cache: RemoverCache | None = None, presets: PresetStore | None = None) -> list[Tool]:
+    cache = cache or RemoverCache()
+    presets = presets or PresetStore()
+    return [EditorTool(cache, presets)]
+
+
 def crear_ventana(rutas: list[str]) -> MainWindow:
-    ventana = MainWindow()
+    herramientas = crear_herramientas()
+    ventana = MainWindow(herramientas)
     if rutas:
-        ventana.abrir(Path(rutas[0]))
+        ventana.mostrar("editor").abrir(Path(rutas[0]))
     return ventana
 
 
