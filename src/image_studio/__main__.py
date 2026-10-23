@@ -8,7 +8,7 @@ from image_studio.cli import main as cli_main
 
 
 def principal(argv: list[str]) -> int:
-    if argv and argv[0] in ("batch", "-h", "--help"):
+    if argv and argv[0] in ("batch", "preparar", "diagnostico", "-h", "--help"):
         return cli_main(argv)
     from image_studio.ui import app
 
