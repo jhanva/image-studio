@@ -18,3 +18,14 @@ calidad profesional, procesando todo en local.
 
 La primera ejecución descarga el modelo a `%LOCALAPPDATA%\ImageStudio\models`. Cada lote deja
 `informe.csv` en la carpeta de salida.
+
+## Uso (Hito 2: editor)
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 -m image_studio
+.\.venv\Scripts\python.exe -X utf8 -m image_studio D:\fotos\termo.jpg
+```
+
+Atajos: Ctrl+O abrir, Ctrl+V pegar, Ctrl+R quitar fondo, V mover, K conservar, E borrar,
+R refinar borde, Ctrl+Z deshacer, Ctrl+Y rehacer, B ver original, Ctrl+0 ajustar, Ctrl+1 100%,
+Ctrl+S guardar PNG. Rueda: zoom. Botón central: desplazar.

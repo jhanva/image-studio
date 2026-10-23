@@ -50,7 +50,7 @@ completa: lo que se ve en el lienzo es lo que se exporta.
 | Pieza | Elección |
 |---|---|
 | Lenguaje | Python 3.14 |
-| UI | PySide6 + tema oscuro (PyQtDarkTheme o QSS propio) |
+| UI | PySide6-Essentials + estilo Fusion con paleta oscura propia |
 | Inferencia | ONNX Runtime: `onnxruntime-gpu[cuda,cudnn]` (CUDA) con respaldo a CPU; sesiones con `enable_mem_pattern = False` (con el patrón de memoria BiRefNet desborda 8 GB de VRAM y pasa de 1.5 s a 22 s) |
 | Imagen | numpy, opencv-python-headless, Pillow, pillow-heif |
 | Limpieza de color y matting clásico | pymatting |
@@ -91,6 +91,7 @@ image-studio/
     core/                 # Python puro, sin Qt
       image_io.py         # carga/normalización (EXIF, CMYK, 16-bit, HEIC) y guardado
       mask_ops.py         # suavizado, desplazamiento, umbral, recorte al contenido
+      brush.py            # huella y estampado de pinceles
       history.py          # deshacer/rehacer por tiles
       export.py           # composición con fondo y escritura del archivo
       metrics.py          # IoU, SAD y MSE para el golden set
@@ -106,18 +107,21 @@ image-studio/
     pipeline/             # sin Qt
       settings.py         # PipelineSettings y presets
       factory.py          # construye el removedor desde los modelos
+      session.py          # sesión de edición: máscara, historial, pinceles, exportar
+      refine_region.py    # matting solo sobre la zona pintada con Refinar borde
       remove_bg.py        # segmentar -> trimap -> matting -> limpieza de color
       batch.py            # lote sin interfaz + informe
     tools/
       base.py             # interfaz Tool: id, nombre, icono, panel, acciones
       background_removal/ # herramienta 1: panel de ajustes, presets, pinceles
     ui/                   # PySide6
-      main_window.py      # barra de herramientas de la suite + panel lateral
-      canvas/             # QGraphicsView: imagen, máscara, tablero, antes/después, zoom
-      brushes/            # conservar, borrar, refinar borde
-      batch_panel.py
-      export_dialog.py
-    workers/              # QThreadPool: inferencia con progreso y cancelación
+      app.py              # arranque y tema
+      main_window.py      # acciones, barra de herramientas y estado
+      qt_image.py         # buffers numpy que respaldan QImage sin copia
+      canvas/             # QGraphicsView: capa de imagen, tablero, zoom, trazos
+      batch_panel.py      # Hito 3
+      export_dialog.py    # Hito 3
+    workers/              # QThreadPool: tareas en segundo plano con señales
     cli.py                # `python -m image_studio batch ...`
   scripts/
     export_models.py      # convierte pesos a ONNX (solo desarrollo, usa PyTorch)
@@ -169,7 +173,7 @@ sujeto que ocupa menos del 2% o más del 98% de la imagen.
 |---|---|
 | Termos y pocillos con brillo o vidrio | Preset Producto: matting desactivado para que los reflejos no queden semitransparentes |
 | Producto blanco sobre fondo blanco | Se marca baja confianza; se corrige con pincel Refinar borde |
-| Imagen mayor a 8000 px por lado | Matting por tiles; el lienzo usa una pirámide de resoluciones para la vista |
+| Imagen mayor a 8000 px por lado | Matting por tiles; el lienzo dibuja solo la zona visible (medido: 8 ms por cuadro a 10000x8000), sin pirámide |
 | La imagen ya trae alfa | Se ofrece usar ese alfa como máscara inicial en lugar de segmentar |
 | Sin GPU o sin VRAM suficiente | Reintento con tiles más pequeños; si vuelve a fallar, CPU, con aviso en la barra de estado |
 | Modelo no descargado | La app abre igual; descarga con progreso y verificación de hash al primer uso |
@@ -185,7 +189,7 @@ sujeto que ocupa menos del 2% o más del 98% de la imagen.
 - La app se lanza con `python -m image_studio`. No hay instalador en el MVP.
 - Ramas, commits, PR y versiones siguen [repo-workflow.md](repo-workflow.md) (Gitflow con
   `main` y `develop`, Conventional Commits en español, versión SemVer en `pyproject.toml`).
-- Entregas por hitos: Hito 1 motor y CLI; Hito 2 editor; Hito 3 suite (lotes en UI, presets propios, exportación en UI). Planes en `docs/plans/`.
+- Entregas por hitos: Hito 1 motor y CLI; Hito 2 editor (incluye guardar PNG transparente); Hito 3 suite (lotes en UI, presets propios, exportación en UI). Planes en `docs/plans/`.
 
 ## 4. Decisiones explícitas
 
