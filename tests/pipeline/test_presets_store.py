@@ -26,7 +26,7 @@ def test_guardar_y_releer():
 def test_archivo_en_utf8(tmp_path):
     PresetStore().guardar("Camisetas ñ", PipelineSettings())
     texto = (tmp_path / "config" / "presets.json").read_text(encoding="utf-8")
-    assert json.loads(texto)["presets"]["Camisetas ñ"]["modelo"] == "birefnet"
+    assert json.loads(texto)["presets"]["Camisetas ñ"]["modelo"] == "auto"
 
 
 def test_nombres_invalidos():

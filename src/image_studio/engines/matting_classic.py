@@ -9,10 +9,26 @@ from contextlib import redirect_stdout
 from dataclasses import dataclass
 
 import numpy as np
-from pymatting import estimate_alpha_cf
-from pymatting.preconditioner.ichol import ichol
 
 from image_studio.core.mask_ops import DESCONOCIDO, FONDO, FRENTE
+
+# pymatting compila con numba al importarse (unos 40 s la primera vez en un equipo nuevo);
+# se carga en la primera llamada para no congelar el arranque de la app.
+estimate_alpha_cf = None
+ichol = None
+
+
+def _cargar_pymatting() -> None:
+    global estimate_alpha_cf, ichol
+    if estimate_alpha_cf is None:
+        from pymatting import estimate_alpha_cf as funcion
+
+        estimate_alpha_cf = funcion
+    if ichol is None:
+        from pymatting.preconditioner.ichol import ichol as funcion
+
+        ichol = funcion
+
 
 # Elementos reservados por fila del sistema; un bloque de 320x320 usa menos de 30.
 _ELEMENTOS_POR_FILA = 100
@@ -44,6 +60,7 @@ class ClassicMatter:
         self.hilos = hilos or os.cpu_count() or 1
 
     def refine(self, rgb: np.ndarray, trimap: np.ndarray, grueso: np.ndarray) -> np.ndarray:
+        _cargar_pymatting()
         alfa = grueso.astype(np.float32, copy=True)
         alfa[trimap == FRENTE] = 1.0
         alfa[trimap == FONDO] = 0.0

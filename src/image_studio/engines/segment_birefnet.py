@@ -13,3 +13,9 @@ class BiRefNetSegmenter(OnnxSegmenter):
     def _postprocesar(self, mapa: np.ndarray) -> np.ndarray:
         # El modelo devuelve logits.
         return 1.0 / (1.0 + np.exp(-mapa))
+
+
+class BiRefNetLiteSegmenter(BiRefNetSegmenter):
+    """BiRefNet con backbone Swin tiny: la mitad de tiempo y 4 veces menos peso en disco."""
+
+    nombre = "birefnet_lite"

@@ -51,7 +51,7 @@ completa: lo que se ve en el lienzo es lo que se exporta.
 |---|---|
 | Lenguaje | Python 3.14 |
 | UI | PySide6-Essentials + estilo Fusion con paleta oscura propia |
-| Inferencia | ONNX Runtime: `onnxruntime-gpu[cuda,cudnn]` (CUDA) con respaldo a CPU; sesiones con `enable_mem_pattern = False` (con el patrón de memoria BiRefNet desborda 8 GB de VRAM y pasa de 1.5 s a 22 s) |
+| Inferencia | ONNX Runtime: `onnxruntime-gpu[cuda,cudnn]` (CUDA) con respaldo a CPU; sesiones con `enable_mem_pattern = False` (con el patrón de memoria BiRefNet desborda 8 GB de VRAM y pasa de 1.5 s a 22 s). Un solo instalador con CUDA; DirectML descartado tras medirlo (no corre BiRefNet). |
 | Imagen | numpy, opencv-python-headless, Pillow, pillow-heif |
 | Limpieza de color y matting clásico | pymatting |
 | Pruebas | pytest, pytest-qt |
@@ -64,6 +64,7 @@ PyTorch no se incluye en la app: ONNX Runtime pesa cientos de MB frente a varios
 | Rol | Modelo | Licencia | Uso |
 |---|---|---|---|
 | Segmentación calidad (por defecto) | BiRefNet (general), ONNX, entrada 1024x1024 | MIT | Todas las imágenes |
+| Segmentación intermedia | BiRefNet liviano (Swin tiny), ONNX, entrada 1024x1024 | MIT | PCs sin GPU NVIDIA de 8 GB: unos 13 s en CPU |
 | Segmentación rápida | ISNet general-use, ONNX | Apache-2.0 | Previews y lotes grandes cuando se elija el modo rápido |
 | Matting de borde | ViTMatte (small), exportado a ONNX | Ver riesgo R1 | No adoptado (ver R1): los pesos públicos se entrenaron con Composition-1k, de uso no comercial |
 | Matting de respaldo | Matting clásico de pymatting (closed-form / learning-based) | MIT | Si ViTMatte no se adopta o falla |
@@ -193,6 +194,8 @@ sujeto que ocupa menos del 2% o más del 98% de la imagen.
 - Ramas, commits, PR y versiones siguen [repo-workflow.md](repo-workflow.md) (Gitflow con
   `main` y `develop`, Conventional Commits en español, versión SemVer en `pyproject.toml`).
 - Entregas por hitos: Hito 1 motor y CLI; Hito 2 editor (incluye guardar PNG transparente); Hito 3 suite (lotes en UI, presets propios, exportación en UI). Planes en `docs/plans/`.
+- Requisitos mínimos: Windows 10/11 de 64 bits, 8 GB de RAM, 4 GB libres en disco (2.3 GB la app y 1.3 GB los modelos). GPU NVIDIA de 8 GB opcional.
+- Selección automática: con GPU NVIDIA de 8 GB o más, BiRefNet en GPU; en otro caso BiRefNet liviano en CPU. Si la GPU falla, se repite en CPU y se avisa.
 
 ## 4. Decisiones explícitas
 
@@ -214,9 +217,9 @@ sujeto que ocupa menos del 2% o más del 98% de la imagen.
 - Capas, texto, formas o composición de diseños.
 - Mockups de productos, upscaling, vectorizado.
 - Selección de sujeto por clic (SAM) o por texto.
-- Instalador `.exe`, auto-actualización, sistema de licencias.
+- Auto-actualización y sistema de licencias (el instalador llega en el Hito 4).
 - Uso multiusuario, nube o API remota.
-- Soporte DirectML para GPU AMD/Intel (el equipo objetivo es NVIDIA).
+- Aceleración en GPU AMD/Intel: DirectML no corre BiRefNet (medido en el Hito 4); esos equipos usan CPU.
 
 ## 5. Riesgos
 

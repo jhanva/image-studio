@@ -57,7 +57,7 @@ def test_origen_inaccesible(tmp_path):
 
 
 def test_modelos_registrados():
-    assert set(MODELOS) == {"birefnet", "isnet"}
+    assert set(MODELOS) == {"birefnet", "birefnet_lite", "isnet"}
     for spec in MODELOS.values():
         assert len(spec.sha256) == 64
         assert spec.url.startswith("https://")

@@ -16,6 +16,12 @@ class OnnxSegmenter:
         self._sesion = sesion
         self._entrada = sesion.get_inputs()[0].name
 
+    @property
+    def proveedor(self) -> str | None:
+        """Proveedor que quedó activo; ONNX Runtime cae a CPU sin error si CUDA no está disponible."""
+        obtener = getattr(self._sesion, "get_providers", None)
+        return obtener()[0] if obtener else None
+
     def predict(self, rgb: np.ndarray) -> np.ndarray:
         alto, ancho = rgb.shape[:2]
         salida = self._sesion.run(None, {self._entrada: self._preparar(rgb)})[0]

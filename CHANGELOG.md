@@ -1,5 +1,24 @@
 # Cambios
 
+## 0.4.0 - 2026-10-23
+
+Instalador para Windows que se adapta al equipo.
+
+- `ImageStudio-Setup-0.4.0.exe`: instalación por usuario, sin permisos de administrador, con
+  accesos directos, desinstalador y preparación del motor durante la instalación.
+- Detección del equipo y elección automática: GPU NVIDIA de 8 GB o más usa BiRefNet en GPU; el
+  resto, BiRefNet liviano en CPU. La barra de estado muestra el equipo y la elección.
+- Si la GPU falla o ONNX Runtime cae a CPU sin avisar, la app sigue en CPU y lo indica.
+- Nuevo modelo intermedio BiRefNet liviano (SHA-256
+  `5600024376f572a557870a5eb0afb1e5961636bef4e1e22132025467d0f03333`).
+- El modelo `auto` pasa a ser el valor por defecto de los presets.
+- CLI: `preparar` y `diagnostico`.
+- El primer arranque no congela la ventana: el motor de matting se prepara en segundo plano.
+- DirectML descartado: no corre BiRefNet.
+- Al actualizar, el instalador borra los archivos internos de la versión anterior.
+
+Pendiente: probar el instalador en un Windows sin Python ni GPU NVIDIA.
+
 ## 0.3.0 - 2026-10-23
 
 Primera versión publicada. Completa el MVP de [docs/spec.md](docs/spec.md).

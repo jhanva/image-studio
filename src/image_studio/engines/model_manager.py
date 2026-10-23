@@ -31,6 +31,13 @@ MODELOS = {
         "58f621f00f5d756097615970a88a791584600dcf7c45b18a0a6267535a1ebd3c",
         972666916,
     ),
+    "birefnet_lite": ModelSpec(
+        "birefnet_lite",
+        "BiRefNet-general-bb_swin_v1_tiny-epoch_232.onnx",
+        _BASE_URL + "BiRefNet-general-bb_swin_v1_tiny-epoch_232.onnx",
+        "5600024376f572a557870a5eb0afb1e5961636bef4e1e22132025467d0f03333",
+        224005088,
+    ),
     "isnet": ModelSpec(
         "isnet",
         "isnet-general-use.onnx",

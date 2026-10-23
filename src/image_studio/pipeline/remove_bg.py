@@ -26,6 +26,8 @@ class RemovalResult:
     baja_confianza: bool
     motivo_confianza: str
     tiempos: dict[str, float] = field(default_factory=dict)
+    dispositivo: str = ""
+    """Modelo y dispositivo que se usaron; lo completa RemoverCache."""
 
 
 def evaluate_confidence(grueso: np.ndarray) -> tuple[bool, str]:

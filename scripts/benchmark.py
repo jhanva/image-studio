@@ -17,8 +17,10 @@ import cv2
 import numpy as np
 
 from image_studio.core.image_io import load_image
+from image_studio.engines.hardware import detect_hardware
 from image_studio.core.mask_ops import DESCONOCIDO, make_trimap
 from image_studio.engines.matting_classic import ClassicMatter
+from image_studio.pipeline.device_choice import choose
 from image_studio.pipeline.factory import build_remover
 from image_studio.pipeline.refine_region import refine_region, region_bbox
 from image_studio.pipeline.settings import PRESETS
@@ -61,7 +63,10 @@ def main() -> int:
     if doc.size != TAMANO:
         doc.rgb = cv2.resize(doc.rgb, TAMANO, interpolation=cv2.INTER_CUBIC)
         doc.alpha = None
-    removedor = build_remover(ajustes.modelo, dispositivo)
+    eleccion = choose(ajustes.modelo, detect_hardware())
+    ajustes = replace(ajustes, modelo=eleccion.modelo)
+    print(f"Usando {eleccion.descripcion}")
+    removedor = build_remover(ajustes.modelo, "cpu" if args.cpu else eleccion.dispositivo)
     removedor.run(doc, ajustes)  # calentamiento: sesión ONNX y compilación de numba
     if args.refinar:
         segundos = medir_refinado(removedor, doc, ajustes)
