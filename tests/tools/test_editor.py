@@ -143,3 +143,25 @@ def test_pegar_desde_portapapeles(editor):
 def test_ver_original(abierto):
     abierto.accion_antes.trigger()
     assert abierto.lienzo.capa.mostrando_antes
+
+
+def test_guardar_y_borrar_preset_propio(editor):
+    editor.guardar_preset("Gorras", PipelineSettings(modelo="isnet"))
+    assert editor.combo_preset.currentText() == "Gorras"
+    assert "Gorras" in PresetStore().propios()
+    assert editor.accion_borrar_preset.isEnabled()
+    editor.borrar_preset("Gorras")
+    assert "Gorras" not in PresetStore().propios()
+    assert editor.combo_preset.findText("Gorras") == -1
+    assert not editor.accion_borrar_preset.isEnabled()
+
+
+def test_exportar_jpg_con_fondo_blanco(abierto, qtbot, tmp_path):
+    from image_studio.core.export import ExportSettings, Fondo
+
+    abierto.quitar_fondo()
+    qtbot.waitUntil(lambda: not abierto.ocupado)
+    destino = abierto.exportar_en(tmp_path / "salida", ExportSettings(formato="jpg", fondo=Fondo.BLANCO))
+    assert destino.suffix == ".jpg"
+    with Image.open(destino) as imagen:
+        assert imagen.getpixel((0, 0)) == (255, 255, 255)
