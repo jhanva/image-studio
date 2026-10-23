@@ -15,6 +15,7 @@ Instalador para Windows que se adapta al equipo.
 - CLI: `preparar` y `diagnostico`.
 - El primer arranque no congela la ventana: el motor de matting se prepara en segundo plano.
 - DirectML descartado: no corre BiRefNet.
+- Al actualizar, el instalador borra los archivos internos de la versión anterior.
 
 Pendiente: probar el instalador en un Windows sin Python ni GPU NVIDIA.
 
