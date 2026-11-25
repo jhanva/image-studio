@@ -6,6 +6,7 @@ __pycache__/
 build/
 dist/
 .claude/settings.local.json
+.claude/skills/
 tmp/
 
 # Modelos descargados o exportados (se obtienen con model_manager)
