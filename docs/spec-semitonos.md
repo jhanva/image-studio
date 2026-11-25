@@ -119,7 +119,7 @@ Los patrones ondulados tienen un periodo de 4 celdas en `u`; los demás, de 1 ce
 
 | Modelo | Contenido |
 |---|---|
-| `HalftoneSettings` | Todos los parámetros de 3.1 a 3.3 y el ancho de impresión. Inmutable, serializable a JSON |
+| `HalftoneSettings` | Todos los parámetros de 3.1 a 3.3. Inmutable, serializable a JSON. El ancho de impresión vive en la sesión porque depende de la imagen y no se guarda en los presets |
 | `KnockoutMode` | `negro`, `blanco`, `auto` (negro o blanco, el más cercano al color medio del marco de 1 px) o `elegido` (color tomado con el cuentagotas) |
 | `Pattern` | `redondo`, `diamante`, `elipse`, `cuadrado`, `linea`, `lineas_onduladas`, `puntos_ondulados` |
 | `AlphaMode` | `tramar` o `cortar` |
@@ -145,7 +145,7 @@ Valores por defecto de `HalftoneSettings`:
 | Semitransparencia | tramar | ver `AlphaMode` |
 | Bordes limpios | 2 px | 0 a 10 px |
 | Restaurar color de tinta | 50% | 0 a 100% |
-| Ancho de impresión | ancho en px / DPI del archivo (300 si no trae DPI) | 1 a 30 pulgadas |
+| Ancho de impresión | ancho en px / 300 (los píxeles del archivo, sin remuestrear; muchos JPG declaran 72 DPI y tomarlo multiplicaría el tamaño) | 1 a 30 pulgadas |
 | DPI de impresión | 300 | fijo |
 
 ### 3.5 Componentes
