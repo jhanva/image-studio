@@ -151,4 +151,29 @@ Suite completa, medición S1 y S2 en la app real, prueba manual con un diseño s
 
 ## Mediciones
 
-Se completan en la tarea 7.
+`scripts/bench_halftone.py`, imagen sintética de 3600x4800, equipo del autor, 2026-11-25,
+mejor de 3 repeticiones:
+
+| Etapa | Tiempo |
+|---|---|
+| E2 limpieza (quitar fondo activo) | 195 ms |
+| E2 alfa visible | 35 ms |
+| E3 cobertura | 323 ms |
+| E4 umbral con ajuste a la rejilla (baldosa periódica) | 12 ms |
+| E4 umbral sin ajuste a la rejilla | 676 ms |
+| E5 salida (restaurar color al 50%) | 786 ms |
+| **Total E2 a E5 con ajuste a la rejilla** | **1350 ms (S1 cumple)** |
+| Rectángulo 1920x1080, E4 + E5 | 100 ms (S2 cumple) |
+
+Sin ajuste a la rejilla el total sube a unos 2 s, por encima de S1. Como el ajuste está activo
+por defecto y el rectángulo visible se muestra en 100 ms, se acepta. Optimizaciones aplicadas:
+
+- `cv2.inRange` para la limpieza, tabla de etiquetas en lugar de `np.isin`;
+- composición con `cv2.merge` y `cv2.bitwise_and` sin indexado booleano;
+- restaurar color vectorizado;
+- baldosa periódica con umbral por rango para la trama ajustada;
+- `float32` para la trama sin ajustar.
+
+El umbral por rango sobre los píxeles reales de la baldosa también resolvió la linealidad (S3):
+con celdas de unos 8.5 px solo hay 73 posiciones de píxel por celda y la tabla de área continua
+se desviaba hasta 0.023.
