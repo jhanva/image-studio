@@ -106,8 +106,9 @@ Los patrones ondulados tienen un periodo de 4 celdas en `u`; los demás, de 1 ce
 ### 3.3 Limpieza
 
 - **Quitar fondo sólido**: detecta el color dominante del borde de la imagen (moda de los píxeles
-  opacos del marco de 1 px) y lo elimina con relleno por inundación desde el borde
-  (`cv2.floodFill`), con tolerancia por canal.
+  opacos del marco de 1 px) y lo elimina con relleno por inundación desde el borde, con
+  tolerancia por canal (componentes conexas de los píxeles parecidos que tocan el borde; lo
+  transparente también deja pasar la inundación).
 - **Quitar también ese color dentro del arte**: elimina ese color en toda la imagen, incluidas
   zonas encerradas como el interior de las letras.
 - **Borrar colores**: lista de colores elegidos con el cuentagotas; se eliminan en toda la imagen.
