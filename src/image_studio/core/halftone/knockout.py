@@ -66,15 +66,18 @@ def restore_ink(rgb: np.ndarray, cov: np.ndarray, k: Color, fuerza: float) -> np
     """Deshace la mezcla tinta-camiseta en la proporción fuerza (0 a 1). Devuelve uint8."""
     if fuerza <= 0:
         return rgb
-    parcial = (cov > 0) & (cov < 1)
-    if not parcial.any():
-        return rgb
-    salida = rgb.copy()
-    c = rgb[parcial].astype(np.float32)
+    # Factor por píxel; 1 (sin cambio) donde la cobertura es 0 o 1.
+    # 1 + (1 / cov - 1) * fuerza = fuerza / cov + (1 - fuerza)
+    factor = np.float32(fuerza) / np.maximum(cov, np.float32(1e-6))
+    factor += np.float32(1.0 - fuerza)
+    np.putmask(factor, (cov <= 0) | (cov >= 1), np.float32(1.0))
     kk = np.asarray(k, np.float32)
-    factor = 1.0 + (1.0 / cov[parcial] - 1.0) * fuerza
-    salida[parcial] = np.clip(kk + (c - kk) * factor[:, None] + 0.5, 0, 255).astype(np.uint8)
-    return salida
+    c = rgb.astype(np.float32)
+    c -= kk
+    c *= factor[..., None]
+    c += kk + np.float32(0.5)
+    np.clip(c, 0, 255, out=c)
+    return c.astype(np.uint8)
 
 
 def border_pixels(rgb: np.ndarray, alpha: np.ndarray) -> np.ndarray:

@@ -143,10 +143,12 @@ def screen_for(ajustes: HalftoneSettings) -> Screen:
 
 def _campo(pantalla: Screen, patron: Pattern, xs: np.ndarray, ys: np.ndarray) -> np.ndarray:
     l2 = pantalla.bx**2 + pantalla.by**2
-    x = (xs.astype(np.float64) + 0.5)[None, :]
-    y = (ys.astype(np.float64) + 0.5)[:, None]
-    u = (x * pantalla.bx + y * pantalla.by) / l2
-    v = (y * pantalla.bx - x * pantalla.by) / l2
+    # float32 basta: u y v llegan a unas mil celdas y la precisión queda en 1e-4 de celda.
+    x = (xs.astype(np.float32) + np.float32(0.5))[None, :]
+    y = (ys.astype(np.float32) + np.float32(0.5))[:, None]
+    ax, ay = np.float32(pantalla.bx / l2), np.float32(pantalla.by / l2)
+    u = x * ax + y * ay
+    v = y * ax - x * ay
     return area_table(patron)(spot(patron, u, v))
 
 
