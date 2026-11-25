@@ -250,3 +250,7 @@ sujeto que ocupa menos del 2% o más del 98% de la imagen.
 ## 7. Siguiente paso
 
 Con la spec aprobada, convertirla en un plan de implementación paso a paso con la skill `plan`.
+
+## 8. Herramientas posteriores
+
+- Semitonos para DTF y sublimación: [spec-semitonos.md](spec-semitonos.md).
