@@ -174,6 +174,19 @@ por defecto y el rectángulo visible se muestra en 100 ms, se acepta. Optimizaci
 - baldosa periódica con umbral por rango para la trama ajustada;
 - `float32` para la trama sin ajustar.
 
+En la suite real (sin ventana visible, ventana de 1500x950, diseño sintético de 3600x4800),
+contando los 150 ms de espera tras el último cambio:
+
+| Acción | Hasta la vista actualizada |
+|---|---|
+| Abrir el diseño | 1.3 s |
+| Cambiar LPI | 0.9 s (imagen completa) |
+| Cambiar alcance | 1.2 s (imagen completa) |
+| Cambiar peso al 100% de zoom | 0.19 s (zona visible), luego la imagen completa |
+
+Para cumplir S2, la vista parcial calcula la cobertura solo sobre el rectángulo visible más un
+margen igual a bordes limpios cuando no está en caché; sin eso tardaba 0.5 s.
+
 El umbral por rango sobre los píxeles reales de la baldosa también resolvió la linealidad (S3):
 con celdas de unos 8.5 px solo hay 73 posiciones de píxel por celda y la tabla de área continua
 se desviaba hasta 0.023.
