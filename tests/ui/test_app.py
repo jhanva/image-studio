@@ -25,7 +25,14 @@ def test_crear_ventana_sin_imagen(qtbot):
 def test_lotes_abre_la_imagen_en_el_editor(qtbot, escribir_png, tmp_path):
     ventana = crear_ventana([])
     qtbot.addWidget(ventana)
-    assert [ventana.lista.item(i).text() for i in range(ventana.lista.count())] == ["Quitar fondo", "Lotes"]
+    assert [ventana.lista.item(i).text() for i in range(ventana.lista.count())] == ["Quitar fondo", "Lotes", "Semitonos"]
     ventana.mostrar("lotes").abrir_en_editor.emit(escribir_png(tmp_path / "b.png"))
     assert ventana.actual().id == "editor"
     assert ventana.herramienta("editor").sesion.doc.path.name == "b.png"
+
+
+def test_la_suite_incluye_semitonos(qtbot):
+    ventana = crear_ventana([])
+    qtbot.addWidget(ventana)
+    herramienta = ventana.mostrar("semitonos")
+    assert herramienta.nombre == "Semitonos" and herramienta.sesion is None

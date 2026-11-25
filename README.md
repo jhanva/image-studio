@@ -36,6 +36,23 @@ La barra lateral cambia entre **Quitar fondo** (editor) y **Lotes**. En Lotes se
 carpetas, el preset y la exportación; doble clic en una fila abre esa imagen en el editor para
 retocarla. Los presets propios se guardan en `%APPDATA%\ImageStudio\presets.json`.
 
+## Uso (Hito 5: semitonos)
+
+La herramienta **Semitonos** prepara diseños para DTF o sublimación: elimina el color de la
+camiseta y convierte en puntos de semitono los colores cercanos a él. Se abre un diseño (PNG,
+JPG u otro formato de entrada; para usar un recorte, primero se exporta desde Quitar fondo), se
+mueven los controles mirando la vista previa y se exporta un PNG con alfa binario a 300 DPI.
+
+- Color a eliminar: negro, blanco, automático o tomado del arte con el cuentagotas.
+- Limpieza: fondo sólido, colores elegidos, tolerancia y encoger borde.
+- Trama: frecuencia (LPI), ángulo, ajuste a la rejilla y siete patrones.
+- Degradado: alcance, peso del punto, descartar puntos pequeños, bordes limpios y restaurar color.
+- Borradores: E borrar, P proteger (sin semitono), Q quitar marca; `[` y `]` cambian el tamaño.
+- T vista sobre camiseta o transparente, B ver original, Ctrl+Shift+S exportar.
+
+Los presets propios se guardan en `%APPDATA%\ImageStudio\halftone_presets.json`.
+`scripts/bench_halftone.py` mide el rendimiento de las etapas.
+
 ## Instalador (Hito 4)
 
 `ImageStudio-Setup-X.Y.Z.exe` instala la app para el usuario actual, sin permisos de
