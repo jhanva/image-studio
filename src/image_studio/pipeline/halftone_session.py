@@ -178,12 +178,23 @@ class HalftoneSession:
             return None
         k = knockout_color(ajustes, rgb, alpha)
         clave_cov = (clave_visible, _clave(ajustes, _COBERTURA), k)
-        cov = self._cache(
-            "cobertura", clave_cov, lambda: coverage_map(rgb, visible, marcas, ajustes, k), generacion
-        )
+        completo = rect == (0, 0, ancho, alto)
+        guardada = self._caches.get("cobertura")
+        zona = (slice(y0, y1), slice(x0, x1))
+        if completo or (guardada is not None and guardada[0] == clave_cov):
+            cov = self._cache(
+                "cobertura", clave_cov, lambda: coverage_map(rgb, visible, marcas, ajustes, k), generacion
+            )[zona]
+        else:
+            # Vista parcial sin caché: la cobertura solo depende de vecinos a bordes_limpios px.
+            m = ajustes.bordes_limpios_px + 1
+            ex0, ey0, ex1, ey1 = max(0, x0 - m), max(0, y0 - m), min(ancho, x1 + m), min(alto, y1 + m)
+            amplia = (slice(ey0, ey1), slice(ex0, ex1))
+            cov = coverage_map(rgb[amplia], visible[amplia], marcas[amplia], ajustes, k)
+            cov = cov[y0 - ey0 : y1 - ey0, x0 - ex0 : x1 - ex0]
+            self.contadores["cobertura_parcial"] += 1
         if not self._vigente(generacion):
             return None
-        completo = rect == (0, 0, ancho, alto)
         clave_umbral = (v_img, _clave(ajustes, _TRAMA))
         if completo:
             umbral = self._cache(
@@ -192,8 +203,7 @@ class HalftoneSession:
         else:
             umbral = threshold_field(rect, ajustes)
             self.contadores["umbral_parcial"] += 1
-        zona = (slice(y0, y1), slice(x0, x1))
-        salida = compose_output(rgb[zona], cov[zona], umbral, k, ajustes.restaurar / 100.0)
+        salida = compose_output(rgb[zona], cov, umbral, k, ajustes.restaurar / 100.0)
         self.contadores["salida"] += 1
         if not self._vigente(generacion):
             return None

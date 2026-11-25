@@ -137,3 +137,17 @@ def test_alfa_original_y_fondo_detectado():
     _, salida = sesion.render()
     assert (salida[:, :20, 3] == 0).all()
     assert sesion.ultimo_fondo is not None
+
+
+def test_vista_parcial_sin_cache_coincide_con_la_completa():
+    doc = _doc()
+    doc.rgb[90:110, :, :] = 255  # franja sólida para que bordes limpios actúe en el borde del rectángulo
+    ajustes = HalftoneSettings(bordes_limpios_px=4, alcance=60)
+    parcial = HalftoneSession(doc, ajustes)
+    parcial.borrador.radio = 6
+    parcial.begin_stroke(120, 60)
+    parcial.end_stroke()
+    rect, zona = parcial.render((100, 50, 200, 100))
+    assert parcial.contadores["cobertura_parcial"] == 1 and parcial.contadores["cobertura"] == 0
+    _, todo = parcial.render()
+    np.testing.assert_array_equal(zona, todo[50:100, 100:200])
