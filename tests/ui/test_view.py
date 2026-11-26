@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 from PySide6.QtCore import QEvent, QPointF, Qt
-from PySide6.QtGui import QMouseEvent
+from PySide6.QtGui import QColor, QMouseEvent
 from PySide6.QtWidgets import QApplication
 
 from image_studio.ui.canvas.view import CanvasView
@@ -79,3 +79,18 @@ def test_vista_previa_de_refinar(vista):
     assert not vista.ruta_refinar.isEmpty()
     vista.limpiar_vista_refinar()
     assert vista.ruta_refinar.isEmpty()
+
+
+def test_fondo_solido_detras_de_la_imagen(qtbot):
+    vista = CanvasView()
+    qtbot.addWidget(vista)
+    vista.resize(400, 300)
+    vista.show()
+    buffer = RgbaBuffer(np.zeros((100, 200, 3), np.uint8), np.zeros((100, 200), np.float32))
+    vista._buffers = (buffer, RgbBuffer(np.zeros((100, 200, 3), np.uint8)))
+    vista.set_images(buffer.imagen, vista._buffers[1].imagen)
+    centro = vista.mapFromScene(QPointF(100, 50))
+    vista.set_fondo(QColor(10, 120, 30))
+    assert vista.viewport().grab().toImage().pixelColor(centro) == QColor(10, 120, 30)
+    vista.set_fondo(None)
+    assert vista.viewport().grab().toImage().pixelColor(centro) != QColor(10, 120, 30)

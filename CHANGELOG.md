@@ -1,5 +1,24 @@
 # Cambios
 
+## 0.5.0 - 2026-11-26
+
+Herramienta Semitonos para DTF y sublimación (spec: [docs/spec-semitonos.md](docs/spec-semitonos.md)).
+
+- Knockout del color de la camiseta (negro, blanco, automático o tomado del arte) y degradado
+  con semitonos: alcance, peso del punto, descartar puntos pequeños, semitransparencias, bordes
+  limpios y restaurar color de tinta.
+- Trama por umbral con siete patrones, LPI, ángulo y ajuste a la rejilla sin moiré.
+- Limpieza previa: fondo sólido, color dentro del arte, colores elegidos, tolerancia y encoger borde.
+- Borradores Borrar, Proteger y Quitar marca con deshacer; ancho de impresión a 300 DPI (máximo 60 MP).
+- Vista previa en segundo plano: zona visible primero y luego la imagen completa; vista sobre
+  camiseta o transparente.
+- Presets incluidos (Camiseta negra y Camiseta blanca) y propios en `halftone_presets.json`.
+- Exportación PNG RGBA con alfa binario a 300 DPI.
+- `scripts/bench_halftone.py`: medición de las etapas.
+- README reorganizado.
+
+Pendiente: probar el instalador en un Windows sin Python ni GPU NVIDIA.
+
 ## 0.4.0 - 2026-10-23
 
 Instalador para Windows que se adapta al equipo.

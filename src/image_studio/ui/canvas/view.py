@@ -55,6 +55,7 @@ class CanvasView(QGraphicsView):
         self._pintando = False
         self._paneo: QPointF | None = None
         self._ajedrez = _patron_ajedrez()
+        self._fondo: QColor | None = None
 
     @property
     def escala(self) -> float:
@@ -80,6 +81,11 @@ class CanvasView(QGraphicsView):
     def actualizar(self, rect: Rect) -> None:
         x0, y0, x1, y1 = rect
         self.capa.update(QRectF(x0, y0, x1 - x0, y1 - y0))
+
+    def set_fondo(self, color: QColor | None) -> None:
+        """Color sólido detrás de la imagen (vista sobre camiseta); None vuelve al tablero."""
+        self._fondo = QColor(color) if color is not None else None
+        self.viewport().update()
 
     def set_brush_radius(self, radio: float) -> None:
         self._radio = radio
@@ -152,7 +158,7 @@ class CanvasView(QGraphicsView):
         painter.fillRect(self.viewport().rect(), FONDO_VISTA)
         if not self.capa.boundingRect().isEmpty():
             zona = self.mapFromScene(self.capa.boundingRect()).boundingRect()
-            painter.fillRect(zona, self._ajedrez)
+            painter.fillRect(zona, self._fondo if self._fondo is not None else self._ajedrez)
         painter.restore()
 
     def _mover_cursor(self, centro: QPointF) -> None:
