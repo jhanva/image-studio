@@ -7,7 +7,7 @@ fondos con IA y convierte diseños a semitonos listos para imprimir, una imagen 
 
 **Dos herramientas, una sola app. Todo se procesa en tu equipo, sin servicios externos.**
 
-[![Versión](https://img.shields.io/badge/versi%C3%B3n-0.5.0-0ea5e9?style=for-the-badge)](CHANGELOG.md)
+[![Versión](https://img.shields.io/badge/versi%C3%B3n-0.6.0-0ea5e9?style=for-the-badge)](CHANGELOG.md)
 [![Herramientas](https://img.shields.io/badge/herramientas-2-84cc16?style=for-the-badge)](#herramientas)
 [![Python](https://img.shields.io/badge/python-3.14-8b5cf6?style=for-the-badge)](#desde-el-c%C3%B3digo-fuente)
 [![Windows](https://img.shields.io/badge/windows-10%20%7C%2011-f97316?style=for-the-badge)](#requisitos)
