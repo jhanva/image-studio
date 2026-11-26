@@ -4,9 +4,9 @@ import image_studio.ui.app
 from image_studio.__main__ import principal
 
 
-def test_batch_va_a_la_cli():
+def test_ayuda_va_a_la_cli():
     with pytest.raises(SystemExit) as salida:
-        principal(["batch", "--help"])
+        principal(["--help"])
     assert salida.value.code == 0
 
 

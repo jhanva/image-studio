@@ -21,8 +21,8 @@ class RemoverCache:
         self._hardware = hardware
         self._removedores: dict[tuple[str, str], object] = {}
         self._gpu_no_responde = False
-        # Cargar BiRefNet tarda unos 11 s; el candado evita cargarlo dos veces si el editor y
-        # el panel de lotes lo piden a la vez.
+        # Cargar BiRefNet tarda unos 11 s; el candado evita cargarlo dos veces si la vista previa
+        # y el recorte final lo piden a la vez.
         self._candado = threading.Lock()
 
     @property

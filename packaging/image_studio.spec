@@ -1,6 +1,6 @@
 # Construye dist\ImageStudio con dos ejecutables que comparten las mismas bibliotecas:
 #   ImageStudio.exe        interfaz, sin consola
-#   image-studio-cli.exe   batch, preparar y diagnostico, con consola
+#   image-studio-cli.exe   preparar y diagnostico, con consola
 # Uso: .\.venv\Scripts\python.exe -m PyInstaller --noconfirm --distpath dist --workpath build packaging\image_studio.spec
 import sysconfig
 from pathlib import Path

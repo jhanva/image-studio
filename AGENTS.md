@@ -9,6 +9,8 @@ El alcance y el diseño de la app viven en [docs/spec.md](docs/spec.md).
 - Trabajar en español. Los textos de la UI y la documentación usan tildes y ñ.
 - App de escritorio Windows para uso personal: suite de herramientas de imagen en
   Python + PySide6. La primera herramienta es quitar fondos.
+- Todas las herramientas trabajan una imagen a la vez. No agregar procesamiento por lotes ni
+  comandos de CLI que procesen carpetas.
 - `core/`, `engines/` y `pipeline/` no importan PySide6. Cada herramienta nueva implementa la
   interfaz `Tool` sin modificar las demás.
 - No inventar modelos, pesos, licencias ni hashes. Comprobarlos o declarar la incertidumbre.

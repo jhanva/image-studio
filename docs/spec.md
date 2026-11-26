@@ -9,7 +9,7 @@ Autor: Johan (jhanva)
 El uso principal es un negocio de productos sublimables (termos, pocillos, camisetas) que
 necesita recortar fondos de dos tipos de imágenes con la misma frecuencia:
 
-- **Fotos de producto** para catálogo y redes: bordes limpios y nítidos, procesamiento por lotes,
+- **Fotos de producto** para catálogo y redes: bordes limpios y nítidos,
   exportación con fondo transparente o blanco.
 - **Imágenes de clientes para sublimar** (personas, mascotas, logos): pelo, pelaje y bordes
   semitransparentes, con corrección manual cuando el modelo falla.
@@ -113,11 +113,9 @@ image-studio/
       presets_store.py    # presets propios en %APPDATA%\ImageStudio\presets.json
       remover_cache.py    # un removedor por modelo, compartido por las herramientas
       remove_bg.py        # segmentar -> trimap -> matting -> limpieza de color
-      batch.py            # lote sin interfaz + informe
     tools/
       base.py             # Tool: QWidget con id, nombre, icono y mensajes de estado
       background_removal/ # herramienta 1: editor (Hito 2) con presets y exportación
-      batch/              # herramienta 2: lotes con progreso, cancelación y tabla
     ui/                   # PySide6
       app.py              # arranque y tema
       main_window.py      # ventana de la suite: barra lateral de herramientas y estado
@@ -126,7 +124,7 @@ image-studio/
       export_dialog.py    # formato, fondo, color, recorte, margen y DPI
       preset_dialog.py    # crear presets propios
     workers/              # QThreadPool: tareas en segundo plano con señales
-    cli.py                # `python -m image_studio batch ...`
+    cli.py                # `python -m image_studio diagnostico | preparar`
   scripts/
     export_models.py      # convierte pesos a ONNX (solo desarrollo, usa PyTorch)
   tests/
@@ -161,12 +159,7 @@ Una imagen:
    - **Refinar borde**: marca la región pintada como desconocido en `Trimap` y re-ejecuta el matting solo en esa región.
 8. **Exportar** según `ExportSettings`.
 
-Lote:
-
-1. Elegir carpeta de entrada, carpeta de salida, preset y `ExportSettings`.
-2. Procesar en segundo plano con barra de progreso y cancelación.
-3. Generar `informe.csv` con archivo, estado (ok, error, baja confianza), tiempo y motivo.
-4. Las imágenes de baja confianza se pueden abrir una por una en el editor.
+Lote: retirado en 0.6.0. Todas las herramientas trabajan una imagen a la vez (sección 8).
 
 **Baja confianza**: más del 15% de los píxeles de la máscara gruesa con alfa entre 0.1 y 0.9, o
 sujeto que ocupa menos del 2% o más del 98% de la imagen.
@@ -181,7 +174,7 @@ sujeto que ocupa menos del 2% o más del 98% de la imagen.
 | La imagen ya trae alfa | Se ofrece usar ese alfa como máscara inicial en lugar de segmentar |
 | Sin GPU o sin VRAM suficiente | Reintento con tiles más pequeños; si vuelve a fallar, CPU, con aviso en la barra de estado |
 | Modelo no descargado | La app abre igual; descarga con progreso y verificación de hash al primer uso |
-| Archivo corrupto o formato no soportado | Mensaje claro; en lote se registra en el informe y se continúa |
+| Archivo corrupto o formato no soportado | Mensaje claro |
 | Varios sujetos y se quiere solo uno | Se resuelve con el pincel Borrar (selección por clic queda fuera del MVP) |
 
 ### 3.7 Entorno y convenciones
@@ -193,7 +186,7 @@ sujeto que ocupa menos del 2% o más del 98% de la imagen.
 - La app se lanza con `python -m image_studio`. No hay instalador en el MVP.
 - Ramas, commits, PR y versiones siguen [repo-workflow.md](repo-workflow.md) (Gitflow con
   `main` y `develop`, Conventional Commits en español, versión SemVer en `pyproject.toml`).
-- Entregas por hitos: Hito 1 motor y CLI; Hito 2 editor (incluye guardar PNG transparente); Hito 3 suite (lotes en UI, presets propios, exportación en UI). Planes en `docs/plans/`.
+- Entregas por hitos: Hito 1 motor y CLI; Hito 2 editor (incluye guardar PNG transparente); Hito 3 suite (lotes en UI, retirados en 0.6.0; presets propios, exportación en UI). Planes en `docs/plans/`.
 - Requisitos mínimos: Windows 10/11 de 64 bits, 8 GB de RAM, 4 GB libres en disco (2.3 GB la app y 1.3 GB los modelos). GPU NVIDIA de 8 GB opcional.
 - Selección automática: con GPU NVIDIA de 8 GB o más, BiRefNet en GPU; en otro caso BiRefNet liviano en CPU. Si la GPU falla, se repite en CPU y se avisa.
 
@@ -208,7 +201,6 @@ sujeto que ocupa menos del 2% o más del 98% de la imagen.
 - Presets Producto y Persona/mascota, más presets propios guardados.
 - Lienzo con zoom, desplazamiento, tablero de transparencia y antes/después.
 - Pinceles Conservar, Borrar y Refinar borde; deshacer/rehacer.
-- Procesamiento por lotes desde la UI y desde la línea de comandos, con informe CSV.
 - Exportación PNG, WebP y JPG con fondo transparente, blanco o color; recorte al contenido con margen; DPI.
 - Arquitectura de suite (`Tool`) lista para nuevas herramientas.
 
@@ -242,9 +234,9 @@ sujeto que ocupa menos del 2% o más del 98% de la imagen.
 | V6 | Refinar borde | Re-ejecutar matting en una región de 500x500 px: <= 2 s en GPU |
 | V7 | Fidelidad del retoque | Máscara exportada idéntica píxel a píxel a la máscara del lienzo (test automático) |
 | V8 | Deshacer | 50 trazos de pincel en imagen de 6000x4000 y deshacer todos devuelve la máscara original exacta; memoria del historial < 1 GB |
-| V9 | Lote | 100 imágenes procesadas sin intervención, con informe CSV que lista el 100% de los archivos y sus estados |
+| V9 | Lote | Retirado en 0.6.0 junto con el procesamiento por lotes |
 | V10 | Fronteras | Test que falla si `core`, `engines` o `pipeline` importan PySide6 |
-| V11 | Resiliencia | Archivo corrupto en un lote no detiene el lote y aparece como error en el informe |
+| V11 | Resiliencia | Retirado en 0.6.0; un archivo corrupto muestra un mensaje claro en el editor |
 | V12 | Codificación | Rutas y nombres de archivo con tildes y ñ se cargan y exportan correctamente |
 
 ## 7. Siguiente paso
@@ -254,3 +246,5 @@ Con la spec aprobada, convertirla en un plan de implementación paso a paso con 
 ## 8. Herramientas posteriores
 
 - Semitonos para DTF y sublimación: [spec-semitonos.md](spec-semitonos.md).
+- 0.6.0: se retira el procesamiento por lotes (panel Lotes y comando `batch`). Toda la suite
+  trabaja una imagen a la vez.
