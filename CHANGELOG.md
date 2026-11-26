@@ -1,5 +1,14 @@
 # Cambios
 
+## 0.6.0 - 2026-11-26
+
+Toda la suite trabaja una imagen a la vez.
+
+### Retirado
+
+- Panel Lotes de la barra lateral.
+- Comando `batch` de la línea de comandos; quedan `preparar` y `diagnostico`.
+
 ## 0.5.0 - 2026-11-26
 
 Herramienta Semitonos para DTF y sublimación (spec: [docs/spec-semitonos.md](docs/spec-semitonos.md)).
