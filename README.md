@@ -7,7 +7,7 @@ fondos con IA, procesa carpetas completas y convierte diseños a semitonos listo
 
 **Tres herramientas, una sola app. Todo se procesa en tu equipo, sin servicios externos.**
 
-[![Versión](https://img.shields.io/badge/versi%C3%B3n-0.4.0-0ea5e9?style=for-the-badge)](CHANGELOG.md)
+[![Versión](https://img.shields.io/badge/versi%C3%B3n-0.5.0-0ea5e9?style=for-the-badge)](CHANGELOG.md)
 [![Herramientas](https://img.shields.io/badge/herramientas-3-84cc16?style=for-the-badge)](#herramientas)
 [![Python](https://img.shields.io/badge/python-3.14-8b5cf6?style=for-the-badge)](#desde-el-c%C3%B3digo-fuente)
 [![Windows](https://img.shields.io/badge/windows-10%20%7C%2011-f97316?style=for-the-badge)](#requisitos)
@@ -85,7 +85,7 @@ fronteras estrictas:
 |---|---|---|---|
 | **Quitar fondo** | Fotos de producto e imágenes para sublimar (personas, mascotas, logos) | Segmentación con IA, matting de bordes, limpieza de color, pinceles Conservar, Borrar y Refinar borde, deshacer, presets y exportación PNG, WebP o JPG | Publicada (0.3.0) |
 | **Lotes** | Carpetas completas con la misma configuración | Progreso, cancelación, informe CSV y apertura en el editor de las imágenes de baja confianza | Publicada (0.3.0) |
-| **Semitonos** | Diseños para DTF y sublimación sobre camisetas | Knockout del color de la camiseta, degradado con siete patrones de trama, limpieza de fondo, borradores, presets, vista previa en vivo y PNG con alfa binario a 300 DPI | En `develop` (próxima 0.5.0) |
+| **Semitonos** | Diseños para DTF y sublimación sobre camisetas | Knockout del color de la camiseta, degradado con siete patrones de trama, limpieza de fondo, borradores, presets, vista previa en vivo y PNG con alfa binario a 300 DPI | Publicada (0.5.0) |
 
 ## Instalación
 
@@ -351,7 +351,7 @@ versión vive solo en `pyproject.toml`.
 |---|---|
 | 0.3.0 | Quitar fondo, editor con pinceles, lotes, presets propios y exportación |
 | 0.4.0 | Instalador único que se adapta al equipo, CLI `diagnostico` y `preparar` |
-| Próxima (0.5.0) | Semitonos para DTF y sublimación |
+| 0.5.0 | Semitonos para DTF y sublimación |
 
 Pendiente:
 
