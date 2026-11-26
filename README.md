@@ -3,12 +3,12 @@
 # Image Studio
 
 Suite de escritorio para Windows que prepara imágenes para catálogo, sublimación y DTF: quita
-fondos con IA, procesa carpetas completas y convierte diseños a semitonos listos para imprimir.
+fondos con IA y convierte diseños a semitonos listos para imprimir, una imagen a la vez.
 
-**Tres herramientas, una sola app. Todo se procesa en tu equipo, sin servicios externos.**
+**Dos herramientas, una sola app. Todo se procesa en tu equipo, sin servicios externos.**
 
-[![Versión](https://img.shields.io/badge/versi%C3%B3n-0.5.0-0ea5e9?style=for-the-badge)](CHANGELOG.md)
-[![Herramientas](https://img.shields.io/badge/herramientas-3-84cc16?style=for-the-badge)](#herramientas)
+[![Versión](https://img.shields.io/badge/versi%C3%B3n-0.6.0-0ea5e9?style=for-the-badge)](CHANGELOG.md)
+[![Herramientas](https://img.shields.io/badge/herramientas-2-84cc16?style=for-the-badge)](#herramientas)
 [![Python](https://img.shields.io/badge/python-3.14-8b5cf6?style=for-the-badge)](#desde-el-c%C3%B3digo-fuente)
 [![Windows](https://img.shields.io/badge/windows-10%20%7C%2011-f97316?style=for-the-badge)](#requisitos)
 
@@ -45,7 +45,6 @@ equipo) y se guarda para los siguientes usos.
   - [Actualizar y desinstalar](#actualizar-y-desinstalar)
 - [Uso](#uso)
   - [Quitar fondo](#quitar-fondo)
-  - [Lotes](#lotes)
   - [Semitonos](#semitonos)
   - [Línea de comandos](#línea-de-comandos)
 - [Modelos](#modelos)
@@ -67,7 +66,7 @@ fronteras estrictas:
 |---|---|---|
 | **Núcleo** | Carga y guarda imágenes, operaciones de máscara, pinceles, historial, semitonos | `src/image_studio/core/` |
 | **Motores** | Inferencia de IA con ONNX Runtime (CUDA con respaldo a CPU), matting, gestión de modelos | `src/image_studio/engines/` |
-| **Pipeline** | Une núcleo y motores: quitar fondo, lotes, sesiones de edición, presets | `src/image_studio/pipeline/` |
+| **Pipeline** | Une núcleo y motores: quitar fondo, sesiones de edición, presets | `src/image_studio/pipeline/` |
 | **Herramientas** | Cada panel de la suite implementa la interfaz `Tool` | `src/image_studio/tools/` |
 | **Interfaz** | Ventana, lienzo, diálogos y tareas en segundo plano | `src/image_studio/ui/`, `src/image_studio/workers/` |
 
@@ -84,7 +83,6 @@ fronteras estrictas:
 | Herramienta | Para qué | Qué incluye | Estado |
 |---|---|---|---|
 | **Quitar fondo** | Fotos de producto e imágenes para sublimar (personas, mascotas, logos) | Segmentación con IA, matting de bordes, limpieza de color, pinceles Conservar, Borrar y Refinar borde, deshacer, presets y exportación PNG, WebP o JPG | Publicada (0.3.0) |
-| **Lotes** | Carpetas completas con la misma configuración | Progreso, cancelación, informe CSV y apertura en el editor de las imágenes de baja confianza | Publicada (0.3.0) |
 | **Semitonos** | Diseños para DTF y sublimación sobre camisetas | Knockout del color de la camiseta, degradado con siete patrones de trama, limpieza de fondo, borradores, presets, vista previa en vivo y PNG con alfa binario a 300 DPI | Publicada (0.5.0) |
 
 ## Instalación
@@ -181,13 +179,6 @@ en el lienzo es lo que se exporta.
 
 Rueda del ratón: zoom. Botón central: desplazar.
 
-### Lotes
-
-Elegir carpeta de entrada, carpeta de salida, preset y formato de exportación. El proceso corre
-en segundo plano con barra de progreso y cancelación, y deja `informe.csv` en la carpeta de
-salida con el estado de cada archivo (ok, error o baja confianza). Doble clic en una fila abre esa
-imagen en el editor para retocarla.
-
 ### Semitonos
 
 Prepara diseños para DTF o sublimación: elimina el color de la camiseta y convierte en puntos de
@@ -211,15 +202,8 @@ exporta un PNG RGBA con alfa binario (solo 0 o 255), como exige el film DTF.
 
 ### Línea de comandos
 
-`image-studio-cli.exe` en la instalación, o `python -m image_studio` desde el código:
-
-```powershell
-.\.venv\Scripts\python.exe -X utf8 -m image_studio batch fotos salida --preset producto
-```
-
-```powershell
-.\.venv\Scripts\python.exe -X utf8 -m image_studio batch fotos salida --preset persona --fondo blanco --formato jpg --recortar --margen 40
-```
+`image-studio-cli.exe` en la instalación, o `python -m image_studio` desde el código. Solo trae
+comandos de mantenimiento; el trabajo con imágenes se hace en la app, una imagen a la vez.
 
 ```powershell
 .\.venv\Scripts\python.exe -X utf8 -m image_studio diagnostico
@@ -227,7 +211,6 @@ exporta un PNG RGBA con alfa binario (solo 0 o 255), como exige el film DTF.
 
 | Comando | Qué hace |
 |---|---|
-| `batch ENTRADA SALIDA` | Quita el fondo de una carpeta. Opciones: `--preset`, `--modelo`, `--formato`, `--fondo`, `--color`, `--recortar`, `--margen`, `--dpi`, `--cpu` |
 | `diagnostico` | Muestra el equipo detectado, la elección automática y prueba el motor |
 | `preparar` | Compila el motor de matting (lo usa el instalador) |
 
@@ -240,7 +223,7 @@ verifica su SHA-256 y los guarda en `%LOCALAPPDATA%\ImageStudio\models`.
 |---|---|---|---|
 | BiRefNet general | Calidad, en GPU NVIDIA de 8 GB o más | 928 MB | MIT |
 | BiRefNet liviano (Swin tiny) | Equipos sin GPU suficiente, en CPU | 214 MB | MIT |
-| ISNet general-use | Modo rápido para previews y lotes grandes | 170 MB | Apache-2.0 |
+| ISNet general-use | Modo rápido para previews y equipos lentos | 170 MB | Apache-2.0 |
 | Matting clásico (pymatting) | Bordes de pelo y semitransparencias | Sin descarga | MIT |
 
 ViTMatte se evaluó y no se adopta: sus pesos públicos se entrenaron con un dataset de uso no
@@ -276,14 +259,13 @@ src/image_studio/
   core/                   Python puro: E/S de imagen, máscara, pinceles, historial, exportación
     halftone/             trama por umbral, knockout, limpieza y etapas del semitono
   engines/                ONNX Runtime, segmentadores, matting, modelos, detección del equipo
-  pipeline/               quitar fondo, lotes, sesiones, presets, caché de removedores
+  pipeline/               quitar fondo, sesiones, presets, caché de removedores
   tools/                  herramientas de la suite (interfaz Tool)
     background_removal/   Quitar fondo
-    batch/                Lotes
     halftone/             Semitonos
   ui/                     ventana, lienzo, diálogos y tema
   workers/                tareas en segundo plano
-  cli.py                  línea de comandos
+  cli.py                  línea de comandos de mantenimiento
 tests/                    pruebas por capa; tests/golden para el set de calidad privado
 scripts/                  build.ps1, benchmark.py, bench_halftone.py
 packaging/                PyInstaller (image_studio.spec), Inno Setup (instalador.iss), lanzador
@@ -338,9 +320,9 @@ versión vive solo en `pyproject.toml`.
 | Síntoma | Causa probable | Solución |
 |---|---|---|
 | Windows SmartScreen bloquea el instalador | El ejecutable no está firmado | "Más información" > "Ejecutar de todas formas" |
-| La primera vez que se quita un fondo tarda mucho | Se está descargando el modelo | Esperar la descarga; la app no muestra el avance, la CLI sí. Requiere internet solo esa vez |
+| La primera vez que se quita un fondo tarda mucho | Se está descargando el modelo | Esperar la descarga; la app no muestra el avance. Requiere internet solo esa vez |
 | Hay GPU NVIDIA pero la app usa CPU | VRAM insuficiente o driver sin CUDA | `image-studio-cli.exe diagnostico` muestra el equipo detectado y el motivo |
-| Quitar fondo es lento | Equipo sin GPU NVIDIA de 8 GB | Usar el modelo rápido (ISNet) para lotes grandes |
+| Quitar fondo es lento | Equipo sin GPU NVIDIA de 8 GB | Usar el modelo rápido (ISNet) |
 | Semitonos muestra patrones raros con la imagen reducida | Moiré de pantalla al ajustar a la ventana | Revisar al 100% (Ctrl+1); la exportación es a resolución completa |
 | Semitonos limita el ancho de impresión | La imagen superaría 60 MP | Reducir el ancho; a 300 DPI equivale a unas 20x30 pulgadas |
 | El resultado de Semitonos no tiene tinta | El color a eliminar coincide con todo el arte | Revisar el color a eliminar; la exportación avisa antes de guardar |
@@ -352,6 +334,7 @@ versión vive solo en `pyproject.toml`.
 | 0.3.0 | Quitar fondo, editor con pinceles, lotes, presets propios y exportación |
 | 0.4.0 | Instalador único que se adapta al equipo, CLI `diagnostico` y `preparar` |
 | 0.5.0 | Semitonos para DTF y sublimación |
+| 0.6.0 | Se retiran los lotes: todas las herramientas trabajan una imagen a la vez |
 
 Pendiente:
 
@@ -369,6 +352,8 @@ Detalle por versión en [CHANGELOG.md](CHANGELOG.md).
 3. **Lo que se ve es lo que se exporta**: el lienzo trabaja a resolución completa.
 4. **No inventar**: modelos, pesos, licencias y hashes se comprueban antes de usarlos.
 5. **Medir antes de afirmar**: tiempos y calidad con scripts y golden set, no a ojo.
+6. **Una imagen a la vez**: cada herramienta abre, ajusta y exporta una sola imagen; no hay
+   procesamiento por lotes.
 
 ## Licencia
 

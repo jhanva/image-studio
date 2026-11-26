@@ -1,4 +1,4 @@
-"""python -m image_studio [IMAGEN] abre el editor; python -m image_studio batch ... usa la CLI."""
+"""python -m image_studio [IMAGEN] abre el editor; preparar y diagnostico usan la CLI."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from image_studio.cli import main as cli_main
 
 
 def principal(argv: list[str]) -> int:
-    if argv and argv[0] in ("batch", "preparar", "diagnostico", "-h", "--help"):
+    if argv and argv[0] in ("preparar", "diagnostico", "-h", "--help"):
         return cli_main(argv)
     from image_studio.ui import app
 

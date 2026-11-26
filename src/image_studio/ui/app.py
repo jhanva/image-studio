@@ -14,7 +14,6 @@ from image_studio.pipeline.presets_store import PresetStore
 from image_studio.pipeline.remover_cache import RemoverCache
 from image_studio.tools.background_removal.editor import EditorTool
 from image_studio.tools.base import Tool
-from image_studio.tools.batch.panel import BatchTool
 from image_studio.tools.halftone.panel import HalftoneTool
 from image_studio.ui.main_window import MainWindow
 from image_studio.workers.tasks import ejecutar
@@ -52,17 +51,13 @@ def aplicar_tema(app: QApplication) -> None:
 
 def crear_herramientas(cache: RemoverCache, presets: PresetStore | None = None) -> list[Tool]:
     presets = presets or PresetStore()
-    return [EditorTool(cache, presets), BatchTool(cache, presets), HalftoneTool()]
+    return [EditorTool(cache, presets), HalftoneTool()]
 
 
 def crear_ventana(rutas: list[str]) -> MainWindow:
     cache = RemoverCache()
     herramientas = crear_herramientas(cache)
     ventana = MainWindow(herramientas)
-    editor, lotes = ventana.herramienta("editor"), ventana.herramienta("lotes")
-    lotes.abrir_en_editor.connect(lambda ruta: (ventana.mostrar("editor"), editor.abrir(ruta)))
-    # Los presets creados en una herramienta aparecen en la otra al cambiar de panel.
-    ventana.lista.currentRowChanged.connect(lambda *_: (editor.recargar_presets(), lotes.recargar_presets()))
     eleccion = choose("auto", cache.hardware)
     ventana.mostrar_equipo(f"{cache.hardware.describir()} | automático: {eleccion.descripcion}")
     ventana.statusBar().showMessage("Preparando el motor (la primera vez puede tardar un minuto)...")
